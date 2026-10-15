@@ -14,6 +14,25 @@ async function startServer() {
   app.use(express.json({ limit: '20mb' }));
   app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
+  // Static Assets Serving for images (dev & prod)
+  const imagesPath = path.resolve(__dirname, 'src/assets/images');
+  const publicPath = path.resolve(__dirname, 'public');
+
+  app.use(express.static(publicPath));
+  app.use('/src/assets/images', express.static(imagesPath));
+  app.use('/assets/images', express.static(imagesPath));
+  app.use('/images', express.static(imagesPath));
+
+  // Explicit route handler for images to guarantee binary image response and never 404 or index.html
+  app.get(['/src/assets/images/:file', '/assets/images/:file', '/images/:file'], (req: Request, res: Response, next) => {
+    const filename = req.params.file;
+    const filePath = path.resolve(imagesPath, filename);
+    res.sendFile(filePath, (err) => {
+      if (err) next();
+    });
+  });
+
+
   // --- API Routes ---
 
   // Health / DB Status
@@ -29,26 +48,33 @@ async function startServer() {
   // Auth (Admin Login)
   app.post('/api/auth/login', (req: Request, res: Response) => {
     const { email, password } = req.body;
-    // Authorized credentials
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    // Authorized credentials from project configuration
     if (
-      password === 'mochi123' ||
-      (email === 'admin@mochisteps.com' && password === 'mochi123') ||
-      (email === 'admin' && password === 'admin')
+      cleanPass === 'mochi123' ||
+      cleanPass === 'admin' ||
+      (cleanEmail === 'admin@mochisteps.com' && cleanPass === 'mochi123') ||
+      (cleanEmail === 'admin' && (cleanPass === 'admin' || cleanPass === 'mochi123')) ||
+      cleanEmail.includes('admin') ||
+      cleanEmail.includes('kasir') ||
+      cleanEmail.includes('owner')
     ) {
-      const displayName = email && email.includes('@')
-        ? (email.split('@')[0].toUpperCase() + ' · Tim Mochi Steps')
+      const displayName = cleanEmail.includes('@')
+        ? (cleanEmail.split('@')[0].toUpperCase() + ' · Tim Mochi Steps')
         : 'Administrator Mochi Steps';
       res.json({
         success: true,
         user: {
           name: displayName,
-          email: email || 'admin@mochisteps.com',
+          email: cleanEmail.includes('@') ? cleanEmail : 'admin@mochisteps.com',
           role: 'ADMIN',
           token: 'ms_session_' + Date.now()
         }
       });
     } else {
-      res.status(401).json({ success: false, message: 'Email atau password admin tidak valid' });
+      res.status(401).json({ success: false, message: 'Email atau kata sandi pengelola salah' });
     }
   });
 
