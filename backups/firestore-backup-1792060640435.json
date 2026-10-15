@@ -1,0 +1,1037 @@
+{
+  "products": [
+    {
+      "id": "prod-1",
+      "rating": 4.9,
+      "description": "Sepatu ballet flats ikonik mochi steps dengan detail pita manis dan bantalan insole cloud-cushion 8mm yang ultra-empuk. Didesain untuk kenyamanan melangkah seharian tanpa lecet.",
+      "reviewCount": 148,
+      "originalPrice": 139000,
+      "createdAt": "2026-03-01T08:00:00.000Z",
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 6
+        },
+        {
+          "stock": 10,
+          "size": 37
+        },
+        {
+          "stock": 14,
+          "size": 38
+        },
+        {
+          "stock": 9,
+          "size": 39
+        },
+        {
+          "stock": 7,
+          "size": 40
+        },
+        {
+          "size": 41,
+          "stock": 4
+        }
+      ],
+      "name": "Mochi Ribbon Ballet Flats",
+      "category": "ballet-maryjane",
+      "colors": [
+        {
+          "name": "Cream Ivory",
+          "hex": "#F5F2EB"
+        },
+        {
+          "name": "Soft Blush",
+          "hex": "#E8CFCB"
+        },
+        {
+          "name": "Onyx Black",
+          "hex": "#1F1F1F"
+        }
+      ],
+      "features": [
+        "Insole Cloud-Cushion 8mm",
+        "Bahan Vegan Lambskin Halus",
+        "Outsole Karet Anti-Slip",
+        "Ujung Sepatu Round-Toe Lembut"
+      ],
+      "isFeatured": true,
+      "categoryName": "Ballet & Mary Jane",
+      "price": 99000,
+      "costPrice": 52000,
+      "image": "/src/assets/images/flatshoes_ballet_maryjane_1791897850132.jpg",
+      "totalStock": 50
+    },
+    {
+      "id": "prod-10",
+      "image": "/src/assets/images/flatshoes_ballet_maryjane_1791897850132.jpg",
+      "originalPrice": 139000,
+      "category": "casual-slipons",
+      "totalStock": 53,
+      "description": "Khusus dirancang bagi yang sering berdiri atau berjalan seharian. Penopang lengkungan kaki ortopedik ringan menjaga postur tetap nyaman tanpa rasa pegal.",
+      "reviewCount": 142,
+      "isFeatured": false,
+      "categoryName": "Casual Soft Leather Slip-Ons",
+      "price": 99000,
+      "colors": [
+        {
+          "name": "Muted Taupe",
+          "hex": "#A69483"
+        },
+        {
+          "hex": "#DDBBB2",
+          "name": "Soft Rose"
+        },
+        {
+          "hex": "#EBE3D5",
+          "name": "Creamy Beige"
+        }
+      ],
+      "createdAt": "2026-03-26T15:00:00.000Z",
+      "features": [
+        "Anatomical Arch Support Insole",
+        "Kulit Lentur Bernapas",
+        "Bantalan Tumit Tebal",
+        "Anti-Bau Antibakteri"
+      ],
+      "sizes": [
+        {
+          "stock": 7,
+          "size": 36
+        },
+        {
+          "stock": 12,
+          "size": 37
+        },
+        {
+          "stock": 15,
+          "size": 38
+        },
+        {
+          "stock": 9,
+          "size": 39
+        },
+        {
+          "size": 40,
+          "stock": 6
+        },
+        {
+          "size": 41,
+          "stock": 4
+        }
+      ],
+      "rating": 4.9,
+      "costPrice": 52000,
+      "name": "Everyday Arch-Support Soft Flats"
+    },
+    {
+      "id": "prod-11",
+      "categoryName": "Casual Soft Leather Slip-Ons",
+      "isFeatured": false,
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 7
+        },
+        {
+          "stock": 11,
+          "size": 37
+        },
+        {
+          "stock": 14,
+          "size": 38
+        },
+        {
+          "stock": 10,
+          "size": 39
+        },
+        {
+          "stock": 6,
+          "size": 40
+        },
+        {
+          "stock": 3,
+          "size": 41
+        }
+      ],
+      "rating": 4.8,
+      "category": "casual-slipons",
+      "createdAt": "2026-03-28T09:40:00.000Z",
+      "totalStock": 51,
+      "price": 89000,
+      "description": "Sepatu slip-on santai dengan ruang jari lebar yang tidak sempit atau membuat kaki terjepit. Bobot ekstra ringan ideal untuk bepergian dan santai.",
+      "originalPrice": 125000,
+      "features": [
+        "Ruang Jari Wide-Toe Box",
+        "Bobot Ringan 180 Gram",
+        "Sol Cengkeram Anti-Slip",
+        "Mudah Dibersihkan"
+      ],
+      "reviewCount": 110,
+      "colors": [
+        {
+          "hex": "#E8DFD5",
+          "name": "Light Sand"
+        },
+        {
+          "hex": "#876953",
+          "name": "Coffee Latte"
+        },
+        {
+          "name": "Olive Dusk",
+          "hex": "#636B59"
+        }
+      ],
+      "image": "/src/assets/images/flatshoes_beige_loafers_1791897885803.jpg",
+      "name": "Minimalist Round-Toe Comfort Flat",
+      "costPrice": 46000
+    },
+    {
+      "id": "prod-12",
+      "totalStock": 44,
+      "colors": [
+        {
+          "hex": "#BAC7BC",
+          "name": "Pastel Mint"
+        },
+        {
+          "hex": "#F3EDDD",
+          "name": "Butter Cream"
+        },
+        {
+          "name": "Deep Espresso",
+          "hex": "#261E1A"
+        }
+      ],
+      "price": 95000,
+      "name": "Cozy Elastic Collar Cloud Slip-On",
+      "features": [
+        "Kerah Tumit Elastis Lembut",
+        "Insole Memory Foam",
+        "Outsole Karet Beralur Kuat",
+        "Tekstur Kulit Halus"
+      ],
+      "createdAt": "2026-03-30T16:00:00.000Z",
+      "reviewCount": 88,
+      "description": "Didesain dengan kerah elastis yang memeluk tumit dengan lembut tanpa meninggalkan bekas merah atau lecet. Menempel mantap saat melangkah cepat.",
+      "isFeatured": false,
+      "categoryName": "Casual Soft Leather Slip-Ons",
+      "image": "/src/assets/images/flatshoes_casual_slipons_1791897850899.jpg",
+      "sizes": [
+        {
+          "stock": 5,
+          "size": 36
+        },
+        {
+          "stock": 10,
+          "size": 37
+        },
+        {
+          "stock": 13,
+          "size": 38
+        },
+        {
+          "size": 39,
+          "stock": 8
+        },
+        {
+          "stock": 5,
+          "size": 40
+        },
+        {
+          "size": 41,
+          "stock": 3
+        }
+      ],
+      "rating": 4.8,
+      "category": "casual-slipons",
+      "costPrice": 50000,
+      "originalPrice": 135000
+    },
+    {
+      "id": "prod-2",
+      "categoryName": "Ballet & Mary Jane",
+      "originalPrice": 159000,
+      "rating": 4.9,
+      "costPrice": 62000,
+      "name": "Aurelia Quilted Ballerina",
+      "features": [
+        "Motif Diamond Quilted Elegan",
+        "Double-Layer Heel Foam",
+        "Sol Fleksibel 180 Derajat",
+        "Gold Tip Aglet pada Pita"
+      ],
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 3
+        },
+        {
+          "stock": 8,
+          "size": 37
+        },
+        {
+          "size": 38,
+          "stock": 12
+        },
+        {
+          "stock": 8,
+          "size": 39
+        },
+        {
+          "stock": 5,
+          "size": 40
+        },
+        {
+          "stock": 3,
+          "size": 41
+        }
+      ],
+      "totalStock": 39,
+      "image": "/src/assets/images/flatshoes_quilted_leather_1791897886963.jpg",
+      "category": "ballet-maryjane",
+      "reviewCount": 92,
+      "createdAt": "2026-03-05T09:00:00.000Z",
+      "colors": [
+        {
+          "hex": "#DCB4B4",
+          "name": "Dusty Rose"
+        },
+        {
+          "hex": "#EDE6DD",
+          "name": "Pearl Beige"
+        },
+        {
+          "hex": "#1A1A1A",
+          "name": "Noir Black"
+        }
+      ],
+      "description": "Ballerina flats motif quilted mewah bertekstur kulit domba ultra-lembut, dilengkapi pelindung tumit busa ganda untuk mobilitas kerja dan pesta tanpa pegal.",
+      "price": 119000,
+      "isFeatured": true
+    },
+    {
+      "id": "prod-3",
+      "reviewCount": 76,
+      "totalStock": 33,
+      "description": "Mary Jane klasik dengan sentuhan bahan beludru premium warna burgundy, strap buckle emas adjustable, dan sol anti-slip elastis.",
+      "image": "/src/assets/images/flatshoes_red_maryjane_1791897885164.jpg",
+      "rating": 4.8,
+      "costPrice": 58000,
+      "price": 109000,
+      "category": "ballet-maryjane",
+      "isFeatured": false,
+      "originalPrice": 149000,
+      "categoryName": "Ballet & Mary Jane",
+      "createdAt": "2026-03-10T10:00:00.000Z",
+      "features": [
+        "Bahan Royal Velvet Lembut",
+        "Gold Adjustable Buckle",
+        "Busa Memori Anatomi",
+        "Ringan Hanya 190 Gram"
+      ],
+      "colors": [
+        {
+          "name": "Burgundy Red",
+          "hex": "#6E1A24"
+        },
+        {
+          "name": "Midnight Black",
+          "hex": "#18181A"
+        },
+        {
+          "hex": "#D6C3A5",
+          "name": "Champagne Gold"
+        }
+      ],
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 4
+        },
+        {
+          "size": 37,
+          "stock": 7
+        },
+        {
+          "size": 38,
+          "stock": 10
+        },
+        {
+          "size": 39,
+          "stock": 6
+        },
+        {
+          "stock": 4,
+          "size": 40
+        },
+        {
+          "size": 41,
+          "stock": 2
+        }
+      ],
+      "name": "Crimson Velvet Mary Jane"
+    },
+    {
+      "id": "prod-4",
+      "name": "Parisienne Two-Tone Cap-Toe",
+      "categoryName": "Ballet & Mary Jane",
+      "description": "Gaya Parisian chic abadi dengan perpaduan nude beige dan glossy black cap toe yang ikonik. Sangat pas untuk gaya profesional kantor hingga santai di kafe.",
+      "reviewCount": 215,
+      "rating": 5,
+      "sizes": [
+        {
+          "stock": 8,
+          "size": 36
+        },
+        {
+          "size": 37,
+          "stock": 14
+        },
+        {
+          "stock": 16,
+          "size": 38
+        },
+        {
+          "stock": 11,
+          "size": 39
+        },
+        {
+          "stock": 7,
+          "size": 40
+        },
+        {
+          "stock": 5,
+          "size": 41
+        }
+      ],
+      "category": "ballet-maryjane",
+      "costPrice": 60000,
+      "totalStock": 61,
+      "features": [
+        "Patent Leather Cap Toe",
+        "Insole Arch Support",
+        "Anti-Slip Ribbed Rubber Sole",
+        "Lining Kulit Vegan Breathable"
+      ],
+      "image": "/src/assets/images/flatshoes_black_captoe_1791897884831.jpg",
+      "originalPrice": 155000,
+      "colors": [
+        {
+          "name": "Nude Two-Tone",
+          "hex": "#DFC3A7"
+        },
+        {
+          "name": "Monokrom Beige",
+          "hex": "#ECE5DB"
+        }
+      ],
+      "isFeatured": true,
+      "price": 115000,
+      "createdAt": "2026-03-12T11:00:00.000Z"
+    },
+    {
+      "id": "prod-5",
+      "features": [
+        "Aksen Horsebit Gold Electroplated",
+        "Pointed Toe Siluet Jenjang",
+        "Backless Slip-On Praktis",
+        "Low 1cm Block Heel"
+      ],
+      "rating": 4.9,
+      "name": "Grace Horsebit Pointed Mules",
+      "isFeatured": true,
+      "price": 125000,
+      "originalPrice": 169000,
+      "totalStock": 42,
+      "createdAt": "2026-03-15T09:30:00.000Z",
+      "image": "/src/assets/images/flatshoes_pointed_mules_1791897851105.jpg",
+      "categoryName": "Pointed Mules & Loafers",
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 5
+        },
+        {
+          "stock": 9,
+          "size": 37
+        },
+        {
+          "size": 38,
+          "stock": 12
+        },
+        {
+          "size": 39,
+          "stock": 8
+        },
+        {
+          "size": 40,
+          "stock": 5
+        },
+        {
+          "stock": 3,
+          "size": 41
+        }
+      ],
+      "colors": [
+        {
+          "hex": "#B06D3B",
+          "name": "Tan Caramel"
+        },
+        {
+          "name": "Oat White",
+          "hex": "#F0EBE1"
+        },
+        {
+          "hex": "#2C1E18",
+          "name": "Espresso Dark"
+        }
+      ],
+      "reviewCount": 162,
+      "description": "Pointed backless mule dengan siluet runcing elegan dan ornamen horsebit emas berkelas. Praktis langsung pakai tanpa repot membungkuk.",
+      "category": "pointed-mules",
+      "costPrice": 65000
+    },
+    {
+      "id": "prod-6",
+      "category": "pointed-mules",
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 7
+        },
+        {
+          "stock": 11,
+          "size": 37
+        },
+        {
+          "stock": 14,
+          "size": 38
+        },
+        {
+          "stock": 10,
+          "size": 39
+        },
+        {
+          "stock": 6,
+          "size": 40
+        },
+        {
+          "stock": 0,
+          "size": 41
+        }
+      ],
+      "reviewCount": 118,
+      "rating": 4.8,
+      "createdAt": "2026-03-18T10:15:00.000Z",
+      "description": "Loafer minimalis flatshoes tanpa hak dengan jahitan handmade kokoh dan lining lembut yang adem. Cocok untuk meeting dan daily commuting.",
+      "totalStock": 48,
+      "categoryName": "Pointed Mules & Loafers",
+      "name": "Almond Cream Soft Loafers",
+      "image": "/src/assets/images/flatshoes_beige_loafers_1791897885803.jpg",
+      "features": [
+        "Almond Toe Ergonomis",
+        "Lining Microfiber Lembut",
+        "Sol Karet Fleksibel",
+        "Busa Tumit Peredam Getaran"
+      ],
+      "costPrice": 62000,
+      "price": 119000,
+      "isFeatured": false,
+      "colors": [
+        {
+          "hex": "#EFEADE",
+          "name": "Cream Milk"
+        },
+        {
+          "name": "Toffee Tan",
+          "hex": "#9E7250"
+        },
+        {
+          "hex": "#2A2A2A",
+          "name": "Charcoal Grey"
+        }
+      ],
+      "originalPrice": 159000
+    },
+    {
+      "id": "prod-7",
+      "colors": [
+        {
+          "name": "Camel Honey",
+          "hex": "#C88E57"
+        },
+        {
+          "name": "Pure White",
+          "hex": "#F7F6F2"
+        },
+        {
+          "name": "Jet Black",
+          "hex": "#141414"
+        }
+      ],
+      "category": "pointed-mules",
+      "name": "Sleek V-Cut Pointed Flat",
+      "costPrice": 58000,
+      "price": 109000,
+      "image": "/src/assets/images/flatshoes_pointed_mules_1791897851105.jpg",
+      "isFeatured": false,
+      "rating": 4.7,
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 5
+        },
+        {
+          "size": 37,
+          "stock": 8
+        },
+        {
+          "size": 38,
+          "stock": 10
+        },
+        {
+          "stock": 7,
+          "size": 39
+        },
+        {
+          "size": 40,
+          "stock": 4
+        },
+        {
+          "size": 41,
+          "stock": 2
+        }
+      ],
+      "originalPrice": 149000,
+      "createdAt": "2026-03-20T14:00:00.000Z",
+      "description": "Potongan V-cut vamp yang menawan menciptakan ilusi tungkai kaki lebih jenjang dan anggun. Kulit sintetis buttery-soft tidak menekan jari kaki.",
+      "reviewCount": 84,
+      "totalStock": 36,
+      "features": [
+        "V-Cut Vamp Modern",
+        "Bantal Tumit Anti-Blister",
+        "Sol Ultra-Lightweight",
+        "Bahan Lentur Mengikuti Kaki"
+      ],
+      "categoryName": "Pointed Mules & Loafers"
+    },
+    {
+      "id": "prod-8",
+      "isFeatured": false,
+      "category": "pointed-mules",
+      "rating": 4.8,
+      "totalStock": 30,
+      "costPrice": 68000,
+      "sizes": [
+        {
+          "size": 36,
+          "stock": 3
+        },
+        {
+          "stock": 6,
+          "size": 37
+        },
+        {
+          "stock": 9,
+          "size": 38
+        },
+        {
+          "size": 39,
+          "stock": 7
+        },
+        {
+          "size": 40,
+          "stock": 3
+        },
+        {
+          "stock": 2,
+          "size": 41
+        }
+      ],
+      "originalPrice": 169000,
+      "name": "Seraphina Backless Chain Loafer",
+      "image": "/src/assets/images/hero_flatshoes_lifestyle_1791897849729.jpg",
+      "colors": [
+        {
+          "name": "Classic Nude",
+          "hex": "#D2BBA0"
+        },
+        {
+          "hex": "#EAE5DC",
+          "name": "Vintage Ivory"
+        },
+        {
+          "hex": "#1B1A1A",
+          "name": "Noir Gold"
+        }
+      ],
+      "createdAt": "2026-03-22T08:30:00.000Z",
+      "categoryName": "Pointed Mules & Loafers",
+      "features": [
+        "Aksen Rantai Emas Halus",
+        "Open Back Slip On",
+        "Padded Arch Insole",
+        "Finishing Kulit Halus"
+      ],
+      "description": "Loafer mule semi-formal dengan sentuhan rantai metalik gold minimalis, bagian tumit terbuka memberikan ventilasi maksimal sepanjang hari.",
+      "reviewCount": 95,
+      "price": 129000
+    },
+    {
+      "id": "prod-9",
+      "name": "CloudWalk Flexible Sage Slip-On",
+      "totalStock": 67,
+      "image": "/src/assets/images/flatshoes_casual_slipons_1791897850899.jpg",
+      "createdAt": "2026-03-24T13:20:00.000Z",
+      "colors": [
+        {
+          "name": "Sage Green",
+          "hex": "#98A58D"
+        },
+        {
+          "name": "Warm Almond",
+          "hex": "#DFD2C2"
+        },
+        {
+          "name": "Terracotta",
+          "hex": "#BF7663"
+        }
+      ],
+      "isFeatured": true,
+      "originalPrice": 129000,
+      "features": [
+        "Bisa Ditekuk 360 Derajat",
+        "Sol Karet Crepe Alami",
+        "Ringan Seperti Tidak Memakai Sepatu",
+        "Elastis & Nyaman"
+      ],
+      "price": 89000,
+      "category": "casual-slipons",
+      "costPrice": 48000,
+      "description": "Flatshoes paling fleksibel yang dapat ditekuk tanpa patah atau meninggalkan kerutan. Menggunakan sol karet alami crepe yang empuk dan lentur sempurna.",
+      "rating": 4.9,
+      "reviewCount": 198,
+      "sizes": [
+        {
+          "stock": 9,
+          "size": 36
+        },
+        {
+          "size": 37,
+          "stock": 15
+        },
+        {
+          "size": 38,
+          "stock": 18
+        },
+        {
+          "stock": 12,
+          "size": 39
+        },
+        {
+          "stock": 8,
+          "size": 40
+        },
+        {
+          "stock": 5,
+          "size": 41
+        }
+      ],
+      "categoryName": "Casual Soft Leather Slip-Ons"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord-1001",
+      "postalCode": "55271",
+      "paymentProofUploadedAt": "2026-10-11T14:25:00.000Z",
+      "invoiceNumber": "MS-20261011-001",
+      "trackingNumber": "JNE98172918820",
+      "paymentStatus": "DISETUJUI",
+      "courierCost": 18000,
+      "paymentProofUrl": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=500&auto=format&fit=crop",
+      "streetAddress": "Jl. Malioboro No. 12",
+      "paymentApprovedAt": "2026-10-11T14:40:00.000Z",
+      "createdAt": "2026-10-11T14:20:00.000Z",
+      "subtotal": 369000,
+      "grandTotal": 387000,
+      "discount": 0,
+      "courier": "JNE Reguler",
+      "customerEmail": "dinda.m@yahoo.com",
+      "notes": "Packing rapi ya",
+      "shippingAddress": "Jl. Malioboro No. 12, Gedongtengen, Yogyakarta, 55271",
+      "paymentMethod": "BCA",
+      "city": "Yogyakarta",
+      "customerName": "Dinda Maharani",
+      "items": [
+        {
+          "selectedSize": 38,
+          "productId": "prod-5",
+          "image": "/src/assets/images/flatshoes_pointed_mules_1791897851105.jpg",
+          "maxStock": 12,
+          "price": 369000,
+          "quantity": 1,
+          "name": "Grace Horsebit Pointed Mules",
+          "selectedColor": "Tan Caramel",
+          "cartItemId": "item-1"
+        }
+      ],
+      "subdistrict": "Gedongtengen",
+      "customerPhone": "081399887766",
+      "orderStatus": "SELESAI"
+    },
+    {
+      "id": "ord-1002",
+      "discount": 0,
+      "subdistrict": "Banjarsari",
+      "createdAt": "2026-10-12T10:15:00.000Z",
+      "customerPhone": "081234567890",
+      "orderStatus": "DIPROSES",
+      "items": [
+        {
+          "productId": "prod-1",
+          "price": 349000,
+          "selectedColor": "Cream Ivory",
+          "quantity": 1,
+          "image": "/src/assets/images/flatshoes_ballet_maryjane_1791897850132.jpg",
+          "cartItemId": "item-2",
+          "name": "Mochi Ribbon Ballet Flats",
+          "maxStock": 10,
+          "selectedSize": 37
+        }
+      ],
+      "paymentProofUploadedAt": "2026-10-12T10:20:00.000Z",
+      "paymentMethod": "QRIS",
+      "streetAddress": "Jl. Slamet Riyadi No. 45",
+      "grandTotal": 369000,
+      "paymentStatus": "DISETUJUI",
+      "postalCode": "57139",
+      "customerEmail": "sinta.larasati@gmail.com",
+      "invoiceNumber": "MS-20261012-002",
+      "courierCost": 20000,
+      "paymentApprovedAt": "2026-10-13T15:48:10.104Z",
+      "subtotal": 349000,
+      "city": "Surakarta (Solo)",
+      "customerName": "Sinta Larasati",
+      "courier": "SiCepat Best",
+      "paymentProofUrl": "https://images.unsplash.com/photo-1580048915913-4f8f5cb481c4?w=500&auto=format&fit=crop",
+      "shippingAddress": "Jl. Slamet Riyadi No. 45, Banjarsari, Surakarta (Solo), 57139"
+    },
+    {
+      "id": "ord-1791977984107",
+      "customerEmail": "risdianalsa11@gmail.com",
+      "customerName": "alsa nabila",
+      "createdAt": "2026-10-14T11:39:44.107Z",
+      "courier": "JNE Reguler",
+      "city": "Jakarta Selatan",
+      "subtotal": 3961000,
+      "courierCost": 18000,
+      "paymentProofUrl": "data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"600\" viewBox=\"0 0 400 600\"><rect width=\"400\" height=\"600\" fill=\"%23f8fafc\"/><rect x=\"20\" y=\"20\" width=\"360\" height=\"560\" rx=\"16\" fill=\"%23ffffff\" stroke=\"%23cbd5e1\" stroke-width=\"2\"/><text x=\"40\" y=\"70\" font-family=\"sans-serif\" font-size=\"20\" font-weight=\"bold\" fill=\"%230f172a\">BUKTI PEMBAYARAN QRIS</text><text x=\"40\" y=\"110\" font-family=\"sans-serif\" font-size=\"14\" fill=\"%2364748b\">Merchant: MOCHI STEPS SOLO</text><line x1=\"40\" y1=\"130\" x2=\"360\" y2=\"130\" stroke=\"%23e2e8f0\" stroke-width=\"1.5\"/><text x=\"40\" y=\"170\" font-family=\"sans-serif\" font-size=\"14\" fill=\"%2364748b\">Waktu: 14 Okt 2026 18:39 WIB</text><text x=\"40\" y=\"210\" font-family=\"sans-serif\" font-size=\"14\" fill=\"%2364748b\">Total Bayar:</text><text x=\"40\" y=\"250\" font-family=\"sans-serif\" font-size=\"26\" font-weight=\"bold\" fill=\"%2316a34a\">Rp 3.979.000</text><rect x=\"40\" y=\"280\" width=\"210\" height=\"34\" rx=\"8\" fill=\"%23fef3c7\"/><text x=\"52\" y=\"302\" font-family=\"sans-serif\" font-size=\"12\" font-weight=\"bold\" fill=\"%23b45309\">MENUNGGU VERIFIKASI ADMIN</text><text x=\"40\" y=\"350\" font-family=\"sans-serif\" font-size=\"13\" fill=\"%2364748b\">Customer: alsa nabila (risdianalsa11@gmail.com)</text><text x=\"40\" y=\"380\" font-family=\"sans-serif\" font-size=\"12\" fill=\"%2394a3b8\">Invoice: MS-20261014-5680</text></svg>",
+      "postalCode": "09872",
+      "trackingNumber": "MS-RESI-564575",
+      "customerPhone": "eee",
+      "paymentProofUploadedAt": "2026-10-14T12:28:44.805Z",
+      "country": "Indonesia",
+      "paymentMethod": "QRIS",
+      "invoiceNumber": "MS-20261014-5680",
+      "paymentStatus": "DISETUJUI",
+      "orderStatus": "DIKIRIM",
+      "statusHistory": [
+        {
+          "note": "Bukti pembayaran valid dan disetujui. Pesanan diproses packing.",
+          "changedAt": "2026-10-14T13:49:43.880Z",
+          "status": "DISETUJUI",
+          "operator": "Admin Keuangan"
+        },
+        {
+          "note": "Status pesanan diubah ke DIKIRIM dengan no resi MS-RESI-216552",
+          "status": "DIKIRIM",
+          "operator": "Admin Logistik",
+          "changedAt": "2026-10-14T13:49:55.640Z"
+        },
+        {
+          "note": "Status pesanan diubah ke DIKIRIM dengan no resi MS-RESI-682850",
+          "changedAt": "2026-10-14T13:49:56.773Z",
+          "status": "DIKIRIM",
+          "operator": "Admin Logistik"
+        },
+        {
+          "changedAt": "2026-10-14T13:49:57.245Z",
+          "operator": "Admin Logistik",
+          "note": "Status pesanan diubah ke DIKIRIM dengan no resi MS-RESI-564575",
+          "status": "DIKIRIM"
+        },
+        {
+          "operator": "Admin Logistik",
+          "status": "SELESAI",
+          "changedAt": "2026-10-14T13:49:58.170Z",
+          "note": "Status pesanan diubah ke SELESAI"
+        },
+        {
+          "operator": "Admin Logistik",
+          "note": "Status pesanan diubah ke DIKIRIM dengan no resi MS-RESI-564575",
+          "changedAt": "2026-10-14T13:50:00.939Z",
+          "status": "DIKIRIM"
+        },
+        {
+          "note": "Status pesanan diubah ke DIKIRIM dengan no resi MS-RESI-564575",
+          "status": "DIKIRIM",
+          "operator": "Admin Logistik",
+          "changedAt": "2026-10-14T13:50:03.087Z"
+        }
+      ],
+      "subdistrict": "Serengan",
+      "discount": 0,
+      "items": [
+        {
+          "name": "Seraphina Backless Chain Loafer",
+          "maxStock": 4,
+          "cartItemId": "prod-8-36-Classic Nude",
+          "price": 395000,
+          "selectedColor": "Classic Nude",
+          "selectedSize": 36,
+          "productId": "prod-8",
+          "image": "/src/assets/images/hero_flatshoes_lifestyle_1791897849729.jpg",
+          "quantity": 1
+        },
+        {
+          "productId": "prod-12",
+          "selectedColor": "Pastel Mint",
+          "price": 335000,
+          "quantity": 1,
+          "image": "/src/assets/images/flatshoes_casual_slipons_1791897850899.jpg",
+          "cartItemId": "prod-12-36-Pastel Mint",
+          "name": "Cozy Elastic Collar Cloud Slip-On",
+          "maxStock": 6,
+          "selectedSize": 36
+        },
+        {
+          "selectedSize": 36,
+          "productId": "prod-2",
+          "image": "/src/assets/images/flatshoes_quilted_leather_1791897886963.jpg",
+          "maxStock": 5,
+          "price": 389000,
+          "quantity": 2,
+          "name": "Aurelia Quilted Ballerina",
+          "selectedColor": "Dusty Rose",
+          "cartItemId": "prod-2-36-Dusty Rose"
+        },
+        {
+          "selectedColor": "Light Sand",
+          "name": "Minimalist Round-Toe Comfort Flat",
+          "image": "/src/assets/images/flatshoes_beige_loafers_1791897885803.jpg",
+          "maxStock": 8,
+          "selectedSize": 36,
+          "quantity": 1,
+          "productId": "prod-11",
+          "cartItemId": "prod-11-36-Light Sand",
+          "price": 319000
+        },
+        {
+          "quantity": 1,
+          "image": "/src/assets/images/flatshoes_pointed_mules_1791897851105.jpg",
+          "cartItemId": "prod-5-36-Tan Caramel",
+          "productId": "prod-5",
+          "selectedSize": 36,
+          "price": 369000,
+          "name": "Grace Horsebit Pointed Mules",
+          "selectedColor": "Tan Caramel",
+          "maxStock": 6
+        },
+        {
+          "name": "Almond Cream Soft Loafers",
+          "selectedColor": "Cream Milk",
+          "quantity": 4,
+          "price": 359000,
+          "selectedSize": 41,
+          "productId": "prod-6",
+          "image": "/src/assets/images/flatshoes_beige_loafers_1791897885803.jpg",
+          "maxStock": 4,
+          "cartItemId": "prod-6-41-Cream Milk"
+        },
+        {
+          "selectedSize": 36,
+          "quantity": 1,
+          "name": "CloudWalk Flexible Sage Slip-On",
+          "productId": "prod-9",
+          "price": 329000,
+          "selectedColor": "Terracotta",
+          "cartItemId": "prod-9-36-Terracotta",
+          "maxStock": 10,
+          "image": "/src/assets/images/flatshoes_casual_slipons_1791897850899.jpg"
+        }
+      ],
+      "destinationType": "DOMESTIC",
+      "notes": "",
+      "shippingAddress": "deloy, Kec. Serengan, Jakarta Selatan, Kode Pos 09872",
+      "grandTotal": 3979000,
+      "paymentApprovedAt": "2026-10-14T13:49:43.880Z",
+      "streetAddress": "deloy"
+    }
+  ],
+  "customers": [
+    {
+      "id": "cust-1",
+      "name": "Sinta Larasati",
+      "email": "sinta.larasati@gmail.com",
+      "address": "Jl. Slamet Riyadi No. 45, RT 02 / RW 04, Banjarsari, Surakarta (Solo), 57139",
+      "postalCode": "57139",
+      "createdAt": "2026-01-15T00:00:00.000Z",
+      "totalOrders": 3,
+      "totalSpent": 1107000,
+      "streetAddress": "Jl. Slamet Riyadi No. 45, RT 02 / RW 04",
+      "phone": "081234567890",
+      "city": "Surakarta (Solo)",
+      "subdistrict": "Banjarsari",
+      "lastOrderDate": "2026-10-12T10:15:00.000Z"
+    },
+    {
+      "id": "cust-2",
+      "phone": "081399887766",
+      "name": "Dinda Maharani",
+      "totalSpent": 738000,
+      "address": "Jl. Malioboro No. 12, Kel. Sosrowijayan, Gedongtengen, Yogyakarta, 55271",
+      "subdistrict": "Gedongtengen",
+      "lastOrderDate": "2026-10-11T14:20:00.000Z",
+      "postalCode": "55271",
+      "city": "Yogyakarta",
+      "email": "dinda.m@yahoo.com",
+      "createdAt": "2026-02-10T00:00:00.000Z",
+      "streetAddress": "Jl. Malioboro No. 12, Kel. Sosrowijayan",
+      "totalOrders": 2
+    },
+    {
+      "id": "cust-3",
+      "createdAt": "2026-03-01T00:00:00.000Z",
+      "phone": "081987654321",
+      "streetAddress": "Apartemen Sudirman Tower Lt. 14 Unit B",
+      "name": "Nadia Putri Utami",
+      "totalSpent": 768000,
+      "totalOrders": 2,
+      "postalCode": "12910",
+      "city": "Jakarta Selatan",
+      "email": "nadiaputri@gmail.com",
+      "address": "Apartemen Sudirman Tower Lt. 14 Unit B, Setiabudi, Jakarta Selatan, 12910",
+      "lastOrderDate": "2026-10-13T04:30:00.000Z",
+      "subdistrict": "Setiabudi"
+    },
+    {
+      "id": "cust-risdianalsa11_gmail_com",
+      "subdistrict": "Serengan",
+      "email": "risdianalsa11@gmail.com",
+      "city": "Jakarta Selatan",
+      "streetAddress": "deloy",
+      "address": "deloy, Kec. Serengan, Jakarta Selatan, Kode Pos 09872",
+      "postalCode": "09872",
+      "phone": "eee",
+      "name": "alsa nabila",
+      "totalSpent": 3979000,
+      "totalOrders": 1,
+      "lastOrderDate": "2026-10-14T11:39:44.631Z",
+      "createdAt": "2026-10-14T11:39:44.631Z"
+    }
+  ],
+  "pos_transactions": [],
+  "stock_mutations": []
+}

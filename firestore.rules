@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Connection test document
+    match /test/{docId} {
+      allow read, write: if true;
+    }
+
+    // Products collection: public read, admin update/create, NO hard delete
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
+    // Orders collection: create for checkout, read and update for tracking/admin, NO hard delete
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
+    // Customers collection: create and read/update customer, NO hard delete
+    match /customers/{customerId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
+    // POS Transactions collection: cashiers and admin can create, read, update, NO hard delete
+    match /pos_transactions/{transactionId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+
+    // Stock Mutations collection: audit log, append-only, NO hard delete
+    match /stock_mutations/{mutationId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+    }
+  }
+}

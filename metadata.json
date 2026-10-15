@@ -1,0 +1,6 @@
+{
+  "name": "Mochi Steps - Luxury & Comfort Flatshoes Store",
+  "description": "Toko flatshoes online premium Mochi Steps dengan koleksi ballet flats, pointed mules, dan casual soft slip-ons. Belanja nyaman, cek stok real-time, dan manajemen pesanan.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
