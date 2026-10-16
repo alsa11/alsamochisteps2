@@ -520,6 +520,11 @@ export default function App() {
         discount={checkoutDiscount}
         promoCode={appliedPromoCode}
         onOrderSuccess={handleOrderSuccess}
+        onOpenTracking={(inv) => {
+          setIsCheckoutOpen(false);
+          setTrackingInitialInvoice(inv);
+          setIsTrackingOpen(true);
+        }}
       />
 
       {/* Order Tracking Modal */}

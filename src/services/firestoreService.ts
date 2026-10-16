@@ -1221,8 +1221,13 @@ export const firestoreService = {
       createdAt: new Date().toISOString()
     };
 
+    // Remove any undefined fields to prevent Firestore setDoc error
+    const cleanTx = Object.fromEntries(
+      Object.entries(newTx).filter(([_, v]) => v !== undefined)
+    );
+
     // Save POS transaction
-    await setDoc(doc(db, 'pos_transactions', id), newTx);
+    await setDoc(doc(db, 'pos_transactions', id), cleanTx);
 
     // Deduct stock for each item & record mutation
     for (const item of newTx.items) {

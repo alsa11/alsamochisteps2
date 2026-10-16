@@ -6,8 +6,9 @@ import {
   Database, MessageCircle, ExternalLink, Calendar, Shield, UserCheck,
   Copy, ArrowUpDown, Filter, ShoppingBag, User, Store, CreditCard,
   Sparkles, AlertCircle, Ban, TrendingUp, DollarSign, LayoutDashboard,
-  Tag, Calculator, ArrowUpRight, CheckCircle2, ChevronRight
+  Tag, Calculator, ArrowUpRight, CheckCircle2, ChevronRight, Download, FileText, Clock
 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 import { Product, Order, Customer, SalesReport, StockMutation, POSTransaction } from '../types';
 import { api } from '../api';
 import { POSKasirView } from './admin/POSKasirView';
@@ -81,6 +82,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [orderFilter, setOrderFilter] = useState<string>('all');
   const [searchOrderQuery, setSearchOrderQuery] = useState('');
+
+  // Tab Approval Sub-tabs & History filters & Order Receipt Modal
+  const [approvalSubTab, setApprovalSubTab] = useState<'pending' | 'history'>('pending');
+  const [approvalHistoryFilter, setApprovalHistoryFilter] = useState<'all' | 'approved' | 'rejected'>('all');
+  const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
 
   // Cancel order modal
   const [cancellingOrder, setCancellingOrder] = useState<Order | null>(null);
@@ -206,6 +212,257 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setInspectProofOrder(ord);
     setRejectReason('');
     setShowRejectModal(true);
+  };
+
+  // Cetak Struk Pesanan via isolated iframe
+  const handlePrintOrderReceipt = () => {
+    if (!receiptOrder) return;
+    try {
+      const printFrame = document.createElement('iframe');
+      printFrame.style.position = 'fixed';
+      printFrame.style.right = '0';
+      printFrame.style.bottom = '0';
+      printFrame.style.width = '0';
+      printFrame.style.height = '0';
+      printFrame.style.border = 'none';
+      document.body.appendChild(printFrame);
+
+      const frameDoc = printFrame.contentWindow?.document || printFrame.contentDocument;
+      if (!frameDoc) {
+        window.print();
+        return;
+      }
+
+      const receiptHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Struk Pesanan - ${receiptOrder.invoiceNumber}</title>
+          <style>
+            @page { size: 80mm auto; margin: 4mm; }
+            body {
+              font-family: 'Courier New', Courier, monospace;
+              width: 74mm;
+              margin: 0 auto;
+              padding: 6px 2px;
+              color: #000;
+              background: #fff;
+              font-size: 11px;
+              line-height: 1.35;
+            }
+            .text-center { text-align: center; }
+            .text-right { text-align: right; }
+            .bold { font-weight: bold; }
+            .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+            .divider { border-top: 1px dashed #444; margin: 6px 0; }
+            .flex-row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+            .item-row { margin-bottom: 4px; }
+            .total-row { font-size: 12px; font-weight: bold; margin-top: 4px; }
+            .footer { font-size: 9px; color: #333; margin-top: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="text-center">
+            <div class="header-title">MOCHISTEPS</div>
+            <div style="font-size: 9px;">Step Into Your Style · Solo</div>
+            <div style="font-size: 9px; color: #444;">WA: 0819-3442-4901</div>
+          </div>
+          
+          <div class="divider"></div>
+          
+          <div class="flex-row">
+            <span>No. Invoice:</span>
+            <span class="bold">${receiptOrder.invoiceNumber}</span>
+          </div>
+          <div class="flex-row">
+            <span>Waktu      :</span>
+            <span>${new Date(receiptOrder.createdAt).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+          <div class="flex-row">
+            <span>Pelanggan  :</span>
+            <span>${receiptOrder.customerName}</span>
+          </div>
+          <div class="flex-row">
+            <span>WhatsApp   :</span>
+            <span>${receiptOrder.customerPhone}</span>
+          </div>
+          <div class="flex-row">
+            <span>Kurir      :</span>
+            <span>${receiptOrder.courier}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          ${receiptOrder.items.map(it => `
+            <div class="item-row">
+              <div class="bold">${it.name}</div>
+              <div class="flex-row" style="font-size: 10px;">
+                <span>${it.quantity}x @${formatIDR(it.price)} (Sz ${it.selectedSize})</span>
+                <span class="bold">${formatIDR(it.price * it.quantity)}</span>
+              </div>
+            </div>
+          `).join('')}
+
+          <div class="divider"></div>
+
+          <div class="flex-row">
+            <span>Subtotal:</span>
+            <span>${formatIDR(receiptOrder.subtotal)}</span>
+          </div>
+          <div class="flex-row">
+            <span>Ongkir:</span>
+            <span>${formatIDR(receiptOrder.courierCost)}</span>
+          </div>
+          ${receiptOrder.discount > 0 ? `
+            <div class="flex-row" style="color: #b00;">
+              <span>Diskon:</span>
+              <span>-${formatIDR(receiptOrder.discount)}</span>
+            </div>
+          ` : ''}
+          
+          <div class="divider"></div>
+
+          <div class="flex-row total-row">
+            <span>TOTAL:</span>
+            <span>${formatIDR(receiptOrder.grandTotal)}</span>
+          </div>
+          <div class="flex-row" style="font-size: 10px; margin-top: 3px;">
+            <span>Metode:</span>
+            <span class="bold">${receiptOrder.paymentMethod}</span>
+          </div>
+          <div class="flex-row" style="font-size: 10px;">
+            <span>Status:</span>
+            <span class="bold">${receiptOrder.paymentStatus}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="text-center footer">
+            <div>Terima kasih telah berbelanja di MochiSteps!</div>
+            <div>Barang dapat ditukar maks. 3 hari</div>
+            <div>dengan menyertakan struk ini.</div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      frameDoc.open();
+      frameDoc.write(receiptHtml);
+      frameDoc.close();
+
+      setTimeout(() => {
+        printFrame.contentWindow?.focus();
+        printFrame.contentWindow?.print();
+        setTimeout(() => {
+          document.body.removeChild(printFrame);
+        }, 1500);
+      }, 350);
+    } catch (e) {
+      console.warn('Print iframe error:', e);
+      window.print();
+    }
+  };
+
+  // Download PDF Struk Pesanan
+  const handleDownloadOrderPDF = () => {
+    if (!receiptOrder) return;
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: [80, 190 + (receiptOrder.items.length * 10)]
+      });
+
+      let y = 10;
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(14);
+      doc.text('MOCHISTEPS', 40, y, { align: 'center' });
+
+      y += 5;
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(8);
+      doc.text('Step Into Your Style · Solo', 40, y, { align: 'center' });
+      y += 4;
+      doc.text('WA: 0819-3442-4901', 40, y, { align: 'center' });
+
+      y += 4;
+      doc.setLineDashPattern([1, 1], 0);
+      doc.line(5, y, 75, y);
+
+      y += 5;
+      doc.setFontSize(8);
+      doc.text(`No. Invoice : ${receiptOrder.invoiceNumber}`, 5, y);
+      y += 4;
+      doc.text(`Waktu       : ${new Date(receiptOrder.createdAt).toLocaleDateString('id-ID')}`, 5, y);
+      y += 4;
+      doc.text(`Pelanggan   : ${receiptOrder.customerName}`, 5, y);
+      y += 4;
+      doc.text(`Telepon     : ${receiptOrder.customerPhone}`, 5, y);
+      y += 4;
+      doc.text(`Kurir       : ${receiptOrder.courier}`, 5, y);
+
+      y += 3;
+      doc.line(5, y, 75, y);
+
+      y += 5;
+      receiptOrder.items.forEach(it => {
+        doc.setFont('courier', 'bold');
+        doc.text(it.name.substring(0, 24), 5, y);
+        y += 4;
+        doc.setFont('courier', 'normal');
+        doc.text(`${it.quantity}x @${formatIDR(it.price)} (Sz ${it.selectedSize})`, 5, y);
+        doc.text(formatIDR(it.price * it.quantity), 75, y, { align: 'right' });
+        y += 5;
+      });
+
+      doc.line(5, y, 75, y);
+
+      y += 5;
+      doc.text('Subtotal:', 5, y);
+      doc.text(formatIDR(receiptOrder.subtotal), 75, y, { align: 'right' });
+
+      y += 4;
+      doc.text('Ongkir:', 5, y);
+      doc.text(formatIDR(receiptOrder.courierCost), 75, y, { align: 'right' });
+
+      if (receiptOrder.discount > 0) {
+        y += 4;
+        doc.text('Diskon:', 5, y);
+        doc.text(`-${formatIDR(receiptOrder.discount)}`, 75, y, { align: 'right' });
+      }
+
+      y += 3;
+      doc.line(5, y, 75, y);
+
+      y += 5;
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(10);
+      doc.text('TOTAL:', 5, y);
+      doc.text(formatIDR(receiptOrder.grandTotal), 75, y, { align: 'right' });
+
+      y += 5;
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(8);
+      doc.text(`Metode : ${receiptOrder.paymentMethod}`, 5, y);
+      y += 4;
+      doc.text(`Status : ${receiptOrder.paymentStatus}`, 5, y);
+
+      y += 5;
+      doc.line(5, y, 75, y);
+
+      y += 6;
+      doc.setFontSize(7);
+      doc.text('Terima kasih telah berbelanja di MochiSteps!', 40, y, { align: 'center' });
+      y += 3.5;
+      doc.text('Barang dapat ditukar maks. 3 hari', 40, y, { align: 'center' });
+      y += 3.5;
+      doc.text('dengan menyertakan struk ini.', 40, y, { align: 'center' });
+
+      doc.save(`Struk_Pesanan_${receiptOrder.invoiceNumber}.pdf`);
+    } catch (e) {
+      console.error('Failed generating PDF:', e);
+      alert('Gagal membuat file PDF');
+    }
   };
 
   // Order status update
@@ -561,19 +818,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             <span>Dashboard</span>
           </button>
 
-          {/* Menu POS Kasir Toko */}
-          <button
-            onClick={() => setActiveTab('pos')}
-            className={`py-2 px-3.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === 'pos'
-                ? 'bg-emerald-700 text-white shadow-xs'
-                : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
-            }`}
-          >
-            <CreditCard className="w-4 h-4 text-emerald-600" />
-            <span>POS Kasir</span>
-          </button>
-
           {/* Menu 2: Data Produk & Stok */}
           <button
             onClick={() => setActiveTab('products')}
@@ -702,6 +946,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               currentUser={currentUser}
               onRefreshData={loadAllData}
               posTransactions={posTransactions}
+              onClose={() => setActiveTab('dashboard')}
             />
           )}
 
@@ -1417,172 +1662,432 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
-          {/* TAB 5: APPROVAL PEMBAYARAN */}
+          {/* TAB 5: APPROVAL PEMBAYARAN DENGAN TAB TERPISAH */}
           {activeTab === 'approvals' && (
             <div className="flex-1 p-5 overflow-y-auto space-y-4 bg-[#FAF8F5]">
+              {/* Header Title Box */}
               <div className="p-4.5 bg-white rounded-2xl border border-[#EAE3DA] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                 <div>
                   <h3 className="font-brand font-bold text-sm text-[#2D2A26] flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-600" />
-                    <span>Approval Pembayaran (QRIS &amp; Transfer Bank)</span>
+                    <span>Verifikasi &amp; Approval Pembayaran (QRIS &amp; Transfer Bank)</span>
                   </h3>
                   <p className="text-xs text-[#7A6E60] mt-0.5">
                     Validasi bukti pembayaran sebelum pesanan dipacking. Approval pesanan hanya memotong stok satu kali.
                   </p>
                 </div>
-                <div className="text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 shrink-0">
-                  {pendingApprovals.length} Pembayaran Menunggu
+                <div className="flex items-center gap-2">
+                  <div className="text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 shrink-0 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                    <span>{pendingApprovals.length} Menunggu Approval</span>
+                  </div>
                 </div>
               </div>
 
-              {pendingApprovals.length === 0 ? (
-                <div className="py-16 text-center text-xs text-[#8C8072] bg-white rounded-2xl border border-dashed border-[#DDD3C7]">
-                  <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2 stroke-1" />
-                  <div className="font-bold text-sm text-[#2D2A26]">Semua Bukti Telah Terverifikasi!</div>
-                  <p className="text-[#7A6E60] mt-1">Tidak ada bukti pembayaran baru yang memerlukan tindakan saat ini.</p>
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl border border-[#EAE3DA] overflow-hidden shadow-2xs">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF7F2] border-b border-[#EAE3DA] text-[#6E6458] font-semibold uppercase text-[11px]">
-                        <tr>
-                          <th className="py-3 px-4">Order / Invoice</th>
-                          <th className="py-3 px-4">Pelanggan</th>
-                          <th className="py-3 px-4 text-right">Total Tagihan</th>
-                          <th className="py-3 px-4">Metode Bayar</th>
-                          <th className="py-3 px-4 text-center">Bukti Pembayaran</th>
-                          <th className="py-3 px-4 text-center">Status</th>
-                          <th className="py-3 px-4 text-right">Aksi (Approve / Tolak)</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#F2EDE6]">
-                        {pendingApprovals.map((ord) => (
-                          <tr key={ord.id} className="hover:bg-[#FAF8F5] transition-colors">
-                            {/* Order */}
-                            <td className="py-3.5 px-4">
-                              <div className="font-mono font-bold text-[#2D2A26]">{ord.invoiceNumber}</div>
-                              <div className="text-[10px] text-[#7A6E60]">
-                                {new Date(ord.createdAt).toLocaleString('id-ID', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </div>
-                              <div className="text-[10px] text-[#8C8072] mt-0.5">
-                                Kurir: {ord.courier}
-                              </div>
-                            </td>
+              {/* DUA SUB-TAB: MENUNGGU APPROVAL vs RIWAYAT APPROVAL */}
+              <div className="flex items-center gap-2 border-b border-[#EAE3DA] pb-2">
+                <button
+                  type="button"
+                  onClick={() => setApprovalSubTab('pending')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                    approvalSubTab === 'pending'
+                      ? 'bg-[#2D2A26] text-white shadow-xs'
+                      : 'bg-white text-[#6E5C49] hover:bg-[#FAF7F2] border border-[#DDD3C7]'
+                  }`}
+                >
+                  <Clock className="w-4 h-4 text-[#E3B890]" />
+                  <span>Tab Menunggu Approval</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    approvalSubTab === 'pending' ? 'bg-amber-400 text-[#2D2A26]' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {pendingApprovals.length}
+                  </span>
+                </button>
 
-                            {/* Pelanggan */}
-                            <td className="py-3.5 px-4">
-                              <div className="font-bold text-[#2D2A26]">{ord.customerName}</div>
-                              <div className="text-[11px] font-mono text-[#5C5042] flex items-center gap-1.5 mt-0.5">
-                                <span>{ord.customerPhone}</span>
-                                <a
-                                  href={getWhatsAppLink(ord)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[#25D366] hover:text-emerald-700 font-bold"
-                                  title="Chat WhatsApp Pembeli"
-                                >
-                                  <MessageCircle className="w-3.5 h-3.5 inline" />
-                                </a>
-                              </div>
-                              <div className="text-[10px] text-[#8C8072] truncate max-w-xs">{ord.city || 'Solo'}</div>
-                            </td>
+                <button
+                  type="button"
+                  onClick={() => setApprovalSubTab('history')}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                    approvalSubTab === 'history'
+                      ? 'bg-[#2D2A26] text-white shadow-xs'
+                      : 'bg-white text-[#6E5C49] hover:bg-[#FAF7F2] border border-[#DDD3C7]'
+                  }`}
+                >
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                  <span>Tab Riwayat Approval</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    approvalSubTab === 'history' ? 'bg-white/20 text-white' : 'bg-[#EAE2D7] text-[#5D4E3E]'
+                  }`}>
+                    {orders.filter(o => o.paymentStatus === 'DISETUJUI' || o.paymentStatus === 'DITOLAK' || o.orderStatus === 'DIBATALKAN' || o.orderStatus === 'SELESAI').length}
+                  </span>
+                </button>
+              </div>
 
-                            {/* Total */}
-                            <td className="py-3.5 px-4 text-right">
-                              <div className="font-bold text-sm text-[#B36B73] tabular-nums">
-                                {formatIDR(ord.grandTotal)}
-                              </div>
-                              <div className="text-[10px] text-[#7A6E60]">
-                                {ord.items.reduce((s, it) => s + it.quantity, 0)} pasang sepatu
-                              </div>
-                            </td>
+              {/* KONTEN SUB-TAB 1: MENUNGGU APPROVAL */}
+              {approvalSubTab === 'pending' && (
+                <>
+                  {pendingApprovals.length === 0 ? (
+                    <div className="py-16 text-center text-xs text-[#8C8072] bg-white rounded-2xl border border-dashed border-[#DDD3C7]">
+                      <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2 stroke-1" />
+                      <div className="font-bold text-sm text-[#2D2A26]">Semua Bukti Telah Terverifikasi!</div>
+                      <p className="text-[#7A6E60] mt-1">Tidak ada bukti pembayaran baru yang memerlukan tindakan saat ini.</p>
+                    </div>
+                  ) : (
+                    <div className="bg-white rounded-2xl border border-[#EAE3DA] overflow-hidden shadow-2xs">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-[#FAF7F2] border-b border-[#EAE3DA] text-[#6E6458] font-semibold uppercase text-[11px]">
+                            <tr>
+                              <th className="py-3 px-4">Order / Invoice</th>
+                              <th className="py-3 px-4">Pelanggan</th>
+                              <th className="py-3 px-4 text-right">Total Tagihan</th>
+                              <th className="py-3 px-4">Metode Bayar</th>
+                              <th className="py-3 px-4 text-center">Bukti Pembayaran</th>
+                              <th className="py-3 px-4 text-center">Status</th>
+                              <th className="py-3 px-4 text-right">Aksi Verifikasi</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#F2EDE6]">
+                            {pendingApprovals.map((ord) => (
+                              <tr key={ord.id} className="hover:bg-[#FAF8F5] transition-colors">
+                                {/* Order */}
+                                <td className="py-3.5 px-4">
+                                  <div className="font-mono font-bold text-[#2D2A26]">{ord.invoiceNumber}</div>
+                                  <div className="text-[10px] text-[#7A6E60]">
+                                    {new Date(ord.createdAt).toLocaleString('id-ID', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                  <div className="text-[10px] text-[#8C8072] mt-0.5">
+                                    Kurir: {ord.courier}
+                                  </div>
+                                </td>
 
-                            {/* Metode Pembayaran */}
-                            <td className="py-3.5 px-4">
-                              <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-[#FAF2EB] text-[#B36B73] border border-[#E8DACB]">
-                                {ord.paymentMethod}
-                              </span>
-                            </td>
+                                {/* Pelanggan */}
+                                <td className="py-3.5 px-4">
+                                  <div className="font-bold text-[#2D2A26]">{ord.customerName}</div>
+                                  <div className="text-[11px] font-mono text-[#5C5042] flex items-center gap-1.5 mt-0.5">
+                                    <span>{ord.customerPhone}</span>
+                                    <a
+                                      href={getWhatsAppLink(ord)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-[#25D366] hover:text-emerald-700 font-bold"
+                                      title="Chat WhatsApp Pembeli"
+                                    >
+                                      <MessageCircle className="w-3.5 h-3.5 inline" />
+                                    </a>
+                                  </div>
+                                  <div className="text-[10px] text-[#8C8072] truncate max-w-xs">{ord.city || 'Solo'}</div>
+                                </td>
 
-                            {/* Bukti Pembayaran */}
-                            <td className="py-3.5 px-4 text-center">
-                              {ord.paymentProofUrl ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setInspectProofOrder(ord)}
-                                  className="group relative inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-[#DDD3C7] bg-[#FAF7F2] hover:bg-white hover:border-[#B36B73] transition-colors cursor-pointer shadow-2xs"
-                                  title="Klik untuk memperbesar bukti transfer"
-                                >
-                                  <img
-                                    src={ord.paymentProofUrl}
-                                    alt="Bukti Transfer"
-                                    className="w-7 h-7 object-cover rounded"
-                                  />
-                                  <span className="text-[11px] font-semibold text-[#4A3E31] group-hover:text-[#B36B73]">
-                                    Lihat Bukti
+                                {/* Total */}
+                                <td className="py-3.5 px-4 text-right">
+                                  <div className="font-bold text-sm text-[#B36B73] tabular-nums">
+                                    {formatIDR(ord.grandTotal)}
+                                  </div>
+                                  <div className="text-[10px] text-[#7A6E60]">
+                                    {ord.items.reduce((s, it) => s + it.quantity, 0)} pasang sepatu
+                                  </div>
+                                </td>
+
+                                {/* Metode Pembayaran */}
+                                <td className="py-3.5 px-4">
+                                  <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-[#FAF2EB] text-[#B36B73] border border-[#E8DACB]">
+                                    {ord.paymentMethod}
                                   </span>
-                                </button>
-                              ) : (
-                                <span className="inline-block px-2 py-1 rounded text-[10px] text-[#8C8072] bg-[#FAF7F2] border border-dashed border-[#DDD3C7]">
-                                  Menunggu upload
-                                </span>
-                              )}
-                            </td>
+                                </td>
 
-                            {/* Status */}
-                            <td className="py-3.5 px-4 text-center">
-                              <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                ord.paymentStatus === 'MENUNGGU_VERIFIKASI'
-                                  ? 'bg-blue-50 text-blue-800 border border-blue-200 animate-pulse'
-                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-                              }`}>
-                                {ord.paymentStatus}
-                              </span>
-                            </td>
+                                {/* Bukti Pembayaran */}
+                                <td className="py-3.5 px-4 text-center">
+                                  {ord.paymentProofUrl ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => setInspectProofOrder(ord)}
+                                      className="group relative inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border border-[#DDD3C7] bg-[#FAF7F2] hover:bg-white hover:border-[#B36B73] transition-colors cursor-pointer shadow-2xs"
+                                      title="Klik untuk memperbesar bukti transfer"
+                                    >
+                                      <img
+                                        src={ord.paymentProofUrl}
+                                        alt="Bukti Transfer"
+                                        className="w-7 h-7 object-cover rounded"
+                                      />
+                                      <span className="text-[11px] font-semibold text-[#4A3E31] group-hover:text-[#B36B73]">
+                                        Lihat Bukti
+                                      </span>
+                                    </button>
+                                  ) : (
+                                    <span className="inline-block px-2 py-1 rounded text-[10px] text-[#8C8072] bg-[#FAF7F2] border border-dashed border-[#DDD3C7]">
+                                      Menunggu upload
+                                    </span>
+                                  )}
+                                </td>
 
-                            {/* Aksi (Approve / Tolak) */}
-                            <td className="py-3.5 px-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleApprovePayment(ord.id)}
-                                  className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1"
-                                  title="Approve / Setujui Pembayaran"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>Approve</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleStartReject(ord)}
-                                  className="px-2.5 py-1.5 border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
-                                  title="Tolak Pembayaran"
-                                >
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  <span>Tolak</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedOrder(ord)}
-                                  className="p-1.5 bg-white hover:bg-[#FAF8F5] border border-[#DDD3C7] text-[#4A3E31] rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                                  title="Lihat Detail Pesanan"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                                {/* Status */}
+                                <td className="py-3.5 px-4 text-center">
+                                  <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                    ord.paymentStatus === 'MENUNGGU_VERIFIKASI'
+                                      ? 'bg-blue-50 text-blue-800 border border-blue-200 animate-pulse'
+                                      : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                  }`}>
+                                    {ord.paymentStatus}
+                                  </span>
+                                </td>
+
+                                {/* Aksi (Setujui, Tolak, Lihat Struk) */}
+                                <td className="py-3.5 px-4 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApprovePayment(ord.id)}
+                                      className="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer flex items-center gap-1"
+                                      title="Setujui Pembayaran"
+                                    >
+                                      <Check className="w-3.5 h-3.5" />
+                                      <span>Setujui</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartReject(ord)}
+                                      className="px-2.5 py-1.5 border border-rose-300 text-rose-700 hover:bg-rose-50 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
+                                      title="Tolak Pembayaran (dengan input alasan)"
+                                    >
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      <span>Tolak</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setReceiptOrder(ord)}
+                                      className="px-2.5 py-1.5 bg-white hover:bg-[#FAF8F5] border border-[#DDD3C7] text-[#4A3E31] rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer flex items-center gap-1"
+                                      title="Lihat Struk Pesanan"
+                                    >
+                                      <Printer className="w-3.5 h-3.5 text-[#B36B73]" />
+                                      <span className="hidden sm:inline">Lihat Struk</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedOrder(ord)}
+                                      className="p-1.5 bg-white hover:bg-[#FAF8F5] border border-[#DDD3C7] text-[#4A3E31] rounded-xl text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                                      title="Lihat Detail Pesanan"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* KONTEN SUB-TAB 2: RIWAYAT APPROVAL */}
+              {approvalSubTab === 'history' && (
+                <div className="space-y-4">
+                  {/* Filter Sub-tab Riwayat: Semua, Disetujui / Lunas, Ditolak / Batal */}
+                  <div className="bg-white p-3.5 rounded-xl border border-[#EAE3DA] flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#55493D] flex items-center gap-1.5">
+                        <Filter className="w-3.5 h-3.5 text-[#B36B73]" />
+                        <span>Filter Status:</span>
+                      </span>
+                      {[
+                        { id: 'all', label: `Semua (${orders.filter(o => o.paymentStatus === 'DISETUJUI' || o.paymentStatus === 'DITOLAK' || o.orderStatus === 'DIBATALKAN' || o.orderStatus === 'SELESAI').length})` },
+                        { id: 'approved', label: `Disetujui / Lunas (${orders.filter(o => o.paymentStatus === 'DISETUJUI' || o.orderStatus === 'SELESAI').length})` },
+                        { id: 'rejected', label: `Ditolak / Batal (${orders.filter(o => o.paymentStatus === 'DITOLAK' || o.orderStatus === 'DIBATALKAN').length})` }
+                      ].map(f => (
+                        <button
+                          key={f.id}
+                          type="button"
+                          onClick={() => setApprovalHistoryFilter(f.id as any)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                            approvalHistoryFilter === f.id
+                              ? 'bg-[#2D2A26] text-white shadow-xs'
+                              : 'bg-[#FAF8F5] text-[#55493D] hover:bg-[#F2ECE4] border border-[#DDD3C7]'
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
+                  {/* Tabel Riwayat Approval */}
+                  {(() => {
+                    const historyList = orders.filter(o => 
+                      o.paymentStatus === 'DISETUJUI' || 
+                      o.paymentStatus === 'DITOLAK' || 
+                      o.orderStatus === 'DIBATALKAN' || 
+                      o.orderStatus === 'SELESAI'
+                    ).filter(o => {
+                      if (approvalHistoryFilter === 'approved') return o.paymentStatus === 'DISETUJUI' || o.orderStatus === 'SELESAI';
+                      if (approvalHistoryFilter === 'rejected') return o.paymentStatus === 'DITOLAK' || o.orderStatus === 'DIBATALKAN';
+                      return true;
+                    });
+
+                    if (historyList.length === 0) {
+                      return (
+                        <div className="py-16 text-center text-xs text-[#8C8072] bg-white rounded-2xl border border-dashed border-[#DDD3C7]">
+                          <CheckCircle className="w-8 h-8 text-[#DDD3C7] mx-auto mb-2" />
+                          <div className="font-bold text-sm text-[#2D2A26]">Tidak Ada Riwayat Approval</div>
+                          <p className="text-[#7A6E60] mt-1">Belum ada transaksi pada kategori filter ini.</p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="bg-white rounded-2xl border border-[#EAE3DA] overflow-hidden shadow-2xs">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-[#FAF7F2] border-b border-[#EAE3DA] text-[#6E6458] font-semibold uppercase text-[11px]">
+                              <tr>
+                                <th className="py-3 px-4">Invoice &amp; Tanggal</th>
+                                <th className="py-3 px-4">Pelanggan</th>
+                                <th className="py-3 px-4 text-right">Total &amp; Metode</th>
+                                <th className="py-3 px-4 text-center">Bukti Bayar</th>
+                                <th className="py-3 px-4 text-center">Status</th>
+                                <th className="py-3 px-4">Catatan / Alasan Penolakan</th>
+                                <th className="py-3 px-4 text-right">Aksi</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#F2EDE6]">
+                              {historyList.map(ord => {
+                                const isApproved = ord.paymentStatus === 'DISETUJUI' || ord.orderStatus === 'SELESAI';
+                                const isRejected = ord.paymentStatus === 'DITOLAK';
+                                const isCancelled = ord.orderStatus === 'DIBATALKAN';
+
+                                return (
+                                  <tr key={ord.id} className="hover:bg-[#FAF8F5] transition-colors">
+                                    <td className="py-3.5 px-4 font-mono font-bold text-[#2D2A26]">
+                                      <div>{ord.invoiceNumber}</div>
+                                      <div className="text-[10px] font-sans text-[#7A6E60] font-normal">
+                                        {new Date(ord.createdAt).toLocaleDateString('id-ID', {
+                                          day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                        })}
+                                      </div>
+                                    </td>
+
+                                    <td className="py-3.5 px-4">
+                                      <div className="font-bold text-[#2D2A26]">{ord.customerName}</div>
+                                      <div className="text-[11px] font-mono text-[#5C5042] flex items-center gap-1.5 mt-0.5">
+                                        <span>{ord.customerPhone}</span>
+                                        <a
+                                          href={getWhatsAppLink(ord)}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-[#25D366] hover:text-emerald-700 font-bold"
+                                          title="Chat WhatsApp Pembeli"
+                                        >
+                                          <MessageCircle className="w-3.5 h-3.5 inline" />
+                                        </a>
+                                      </div>
+                                    </td>
+
+                                    <td className="py-3.5 px-4 text-right">
+                                      <div className="font-bold text-[#B36B73] tabular-nums">
+                                        {formatIDR(ord.grandTotal)}
+                                      </div>
+                                      <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-[#FAF2EB] text-[#8C6D52]">
+                                        {ord.paymentMethod}
+                                      </span>
+                                    </td>
+
+                                    <td className="py-3.5 px-4 text-center">
+                                      {ord.paymentProofUrl ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => setInspectProofOrder(ord)}
+                                          className="inline-flex items-center gap-1 px-2 py-1 bg-white hover:bg-[#FAF8F5] border border-[#DDD3C7] rounded-lg text-[10px] font-semibold text-[#524638] cursor-pointer"
+                                        >
+                                          <img src={ord.paymentProofUrl} alt="Bukti" className="w-6 h-6 object-cover rounded" />
+                                          <span>Lihat</span>
+                                        </button>
+                                      ) : (
+                                        <span className="text-[10px] text-[#8C8072]">-</span>
+                                      )}
+                                    </td>
+
+                                    <td className="py-3.5 px-4 text-center">
+                                      {isApproved ? (
+                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                          Disetujui / Lunas
+                                        </span>
+                                      ) : isRejected ? (
+                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                                          Ditolak
+                                        </span>
+                                      ) : isCancelled ? (
+                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                          Dibatalkan
+                                        </span>
+                                      ) : (
+                                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-800 border border-gray-200">
+                                          {ord.paymentStatus}
+                                        </span>
+                                      )}
+                                    </td>
+
+                                    <td className="py-3.5 px-4 text-[#55493D]">
+                                      {ord.paymentRejectionReason ? (
+                                        <div className="p-1.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-[11px] leading-tight">
+                                          <strong className="block text-[10px] uppercase font-bold text-rose-900">Alasan Tolak:</strong>
+                                          {ord.paymentRejectionReason}
+                                        </div>
+                                      ) : isCancelled ? (
+                                        <div className="text-[11px] text-amber-800">
+                                          Dibatalkan (stok telah dikembalikan)
+                                        </div>
+                                      ) : isApproved ? (
+                                        <div className="text-[11px] text-emerald-800 flex items-center gap-1 font-medium">
+                                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                          <span>Pembayaran valid &amp; diverifikasi</span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-[11px] text-[#8C8072]">-</span>
+                                      )}
+                                    </td>
+
+                                    <td className="py-3.5 px-4 text-right">
+                                      <div className="flex items-center justify-end gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => setReceiptOrder(ord)}
+                                          className="px-2.5 py-1 bg-white hover:bg-[#FAF8F5] border border-[#DDD3C7] text-[#4A3E31] rounded-lg text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                                          title="Cetak & Lihat Struk"
+                                        >
+                                          <Printer className="w-3.5 h-3.5 text-[#B36B73]" />
+                                          <span>Struk</span>
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setSelectedOrder(ord)}
+                                          className="p-1.5 bg-white hover:bg-[#FAF8F5] border border-[#DDD3C7] text-[#4A3E31] rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                                          title="Lihat Detail Pesanan"
+                                        >
+                                          <Eye className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
@@ -2160,6 +2665,156 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL STRUK DIGITAL PESANAN (THERMAL STYLE, FIT VIEWPORT, TIDAK BLANK) */}
+        {receiptOrder && (
+          <div className="fixed inset-0 z-70 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+            <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-[#DDD3C7] flex flex-col max-h-[88vh] overflow-hidden animate-in zoom-in-95 duration-150">
+              {/* Header Popup */}
+              <div className="px-4 py-3 bg-[#FAF8F5] border-b border-[#EAE3DA] flex items-center justify-between shrink-0">
+                <span className="font-bold text-xs text-[#2D2A26] flex items-center gap-1.5">
+                  <Printer className="w-4 h-4 text-[#B36B73]" />
+                  <span>Struk Resmi Pesanan Online</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setReceiptOrder(null)}
+                  className="p-1 text-[#8C8072] hover:text-[#2D2A26] rounded-full hover:bg-[#F2ECE4] cursor-pointer"
+                  title="Tutup Struk"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Thermal Receipt Content */}
+              <div className="flex-1 overflow-y-auto min-h-0 p-5 bg-white font-mono text-[11px] text-[#24211D] space-y-3">
+                {/* Store Header */}
+                <div className="text-center space-y-0.5 border-b border-dashed border-[#888] pb-3">
+                  <div className="font-black text-sm tracking-wider text-[#2D2A26]">MOCHISTEPS</div>
+                  <div className="text-[10px] text-[#555] font-sans font-medium">Step Into Your Style · Solo</div>
+                  <div className="text-[10px] text-[#666]">Jl. Slamet Riyadi No. 45, Solo</div>
+                  <div className="text-[10px] text-[#666]">WhatsApp: 0819-3442-4901</div>
+                </div>
+
+                {/* Metadata */}
+                <div className="space-y-1 border-b border-dashed border-[#888] pb-3 text-[10px]">
+                  <div className="flex justify-between">
+                    <span className="text-[#666]">No. Invoice:</span>
+                    <strong className="text-[#2D2A26]">{receiptOrder.invoiceNumber}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666]">Waktu:</span>
+                    <span>{new Date(receiptOrder.createdAt).toLocaleString('id-ID', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666]">Pelanggan:</span>
+                    <strong>{receiptOrder.customerName}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666]">No. WA:</span>
+                    <span>{receiptOrder.customerPhone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#666]">Kurir:</span>
+                    <span>{receiptOrder.courier}</span>
+                  </div>
+                  {receiptOrder.trackingNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-[#666]">No. Resi:</span>
+                      <strong className="text-emerald-700">{receiptOrder.trackingNumber}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Items */}
+                <div className="space-y-2 border-b border-dashed border-[#888] pb-3">
+                  {receiptOrder.items.map((it, i) => (
+                    <div key={i} className="space-y-0.5">
+                      <div className="font-bold text-[#2D2A26]">{it.name}</div>
+                      <div className="flex justify-between text-[10px] text-[#555]">
+                        <span>{it.quantity}x @{formatIDR(it.price)} (Sz {it.selectedSize})</span>
+                        <strong className="text-[#2D2A26]">{formatIDR(it.price * it.quantity)}</strong>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Subtotal, Ongkir, Diskon & Total */}
+                <div className="space-y-1 text-[10px]">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>{formatIDR(receiptOrder.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Ongkos Kirim:</span>
+                    <span>{formatIDR(receiptOrder.courierCost)}</span>
+                  </div>
+                  {receiptOrder.discount > 0 && (
+                    <div className="flex justify-between text-rose-700 font-bold">
+                      <span>Diskon Promo:</span>
+                      <span>-{formatIDR(receiptOrder.discount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-1.5 border-t border-dashed border-[#888] text-xs font-black text-[#2D2A26]">
+                    <span>TOTAL:</span>
+                    <span className="text-[#B36B73]">{formatIDR(receiptOrder.grandTotal)}</span>
+                  </div>
+                  <div className="flex justify-between pt-1 text-[10px]">
+                    <span className="text-[#666]">Metode Bayar:</span>
+                    <strong className="text-[#2D2A26]">{receiptOrder.paymentMethod}</strong>
+                  </div>
+                  <div className="flex justify-between text-[10px]">
+                    <span className="text-[#666]">Status Bayar:</span>
+                    <strong className={receiptOrder.paymentStatus === 'DISETUJUI' ? 'text-emerald-700' : 'text-amber-700'}>
+                      {receiptOrder.paymentStatus}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Footer notes */}
+                <div className="text-center text-[9px] text-[#666] pt-2 border-t border-dashed border-[#888] space-y-0.5">
+                  <div>Terima kasih telah berbelanja di MochiSteps!</div>
+                  <div>Barang dapat ditukar maks. 3 hari</div>
+                  <div>dengan menyertakan struk ini.</div>
+                </div>
+              </div>
+
+              {/* Action Buttons Footer */}
+              <div className="p-3 bg-[#FAF8F5] border-t border-[#EAE3DA] flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handlePrintOrderReceipt}
+                  className="flex-1 py-2 px-3 bg-[#2D2A26] hover:bg-[#1A1816] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-98"
+                >
+                  <Printer className="w-3.5 h-3.5 text-[#E3B890]" />
+                  <span>Cetak Struk</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadOrderPDF}
+                  className="py-2 px-3 bg-white hover:bg-[#FAF7F2] border border-[#DDD3C7] text-[#4A3E31] rounded-xl font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  title="Download File PDF"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#B36B73]" />
+                  <span className="hidden sm:inline">PDF</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setReceiptOrder(null)}
+                  className="py-2 px-3 bg-[#EAE2D7] hover:bg-[#DDD3C7] text-[#4A3E31] rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  Tutup
+                </button>
               </div>
             </div>
           </div>

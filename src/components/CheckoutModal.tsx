@@ -14,6 +14,7 @@ interface CheckoutModalProps {
   discount: number;
   promoCode: string;
   onOrderSuccess: (order: Order) => void;
+  onOpenTracking?: (invoice: string) => void;
 }
 
 // Daftar Kota & Kabupaten Populer se-Indonesia untuk Datalist
@@ -50,7 +51,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   items,
   discount,
   promoCode,
-  onOrderSuccess
+  onOrderSuccess,
+  onOpenTracking
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -217,6 +219,28 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       const order = await api.createOrder(orderPayload);
       setCreatedOrder(order);
       onOrderSuccess(order);
+
+      // Save order to device localStorage for 1-click effortless tracking
+      try {
+        const raw = localStorage.getItem('mochisteps_my_orders');
+        const prev = raw ? JSON.parse(raw) : [];
+        const next = [
+          {
+            id: order.id,
+            invoiceNumber: order.invoiceNumber,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+            grandTotal: order.grandTotal,
+            paymentMethod: order.paymentMethod,
+            paymentStatus: order.paymentStatus,
+            createdAt: order.createdAt || new Date().toISOString()
+          },
+          ...prev.filter((p: any) => p.invoiceNumber !== order.invoiceNumber)
+        ].slice(0, 8);
+        localStorage.setItem('mochisteps_my_orders', JSON.stringify(next));
+      } catch (err) {
+        console.warn('LocalStorage save error:', err);
+      }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan saat memproses pesanan.');
     } finally {
@@ -537,12 +561,40 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               </a>
             </div>
 
+            {/* Lacak Pesanan Langsung Tanpa Harus Ingat Nomor */}
+            <div className="p-3.5 bg-[#FAF7F2] rounded-xl border border-[#E8DACB] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <div className="font-bold text-xs text-[#2D2A26] flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-[#B36B73]" />
+                  <span>Pantau Pesanan Anda Tanpa Ribet</span>
+                </div>
+                <p className="text-[11px] text-[#7A6E60]">
+                  Pesanan telah tersimpan di browser ini. Anda bisa mengecek status pesanan kapan saja tanpa harus mengingat nomor pesanan.
+                </p>
+              </div>
+
+              {onOpenTracking && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (createdOrder) {
+                      onOpenTracking(createdOrder.invoiceNumber);
+                    }
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-[#2D2A26] hover:bg-[#1A1816] text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer active:scale-95"
+                >
+                  <Truck className="w-3.5 h-3.5 text-[#E3B890]" />
+                  <span>Lacak Pesanan Ini Sekarang</span>
+                </button>
+              )}
+            </div>
+
             <div className="flex justify-end pt-2">
               <button
                 onClick={onClose}
                 className="w-full sm:w-auto px-6 py-2.5 bg-[#24211D] hover:bg-[#3D3730] text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
               >
-                Selesai & Tutup
+                Selesai &amp; Tutup
               </button>
             </div>
           </div>

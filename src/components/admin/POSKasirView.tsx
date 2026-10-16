@@ -33,6 +33,7 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
   // Catalog search & category filter
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedProductSizes, setSelectedProductSizes] = useState<Record<string, number>>({});
   
   // POS Cart State
   const [posCart, setPosCart] = useState<{
@@ -141,10 +142,8 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
       alert('Pilih minimal 1 produk sepatu ke dalam keranjang kasir.');
       return;
     }
-    // Set default cash amount for Tunai
-    if (cashAmountPaid === 0 || cashAmountPaid < grandTotal) {
-      setCashAmountPaid(grandTotal);
-    }
+    // Always preset cash amount to grandTotal for smooth Tunai checkout
+    setCashAmountPaid(grandTotal);
     setIsPaymentModalOpen(true);
   };
 
@@ -156,7 +155,7 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
     }
 
     if (paymentMethod === 'TUNAI' && cashAmountPaid < grandTotal) {
-      alert(`Uang tunai yang diterima (${formatIDR(cashAmountPaid)}) kurang dari total tagihan (${formatIDR(grandTotal)}).`);
+      alert(`Uang tunai yang diterima (${formatIDR(cashAmountPaid)}) kurang dari total tagihan (${formatIDR(grandTotal)}). Silakan klik Uang Pas atau sesuaikan nominal.`);
       return;
     }
 
@@ -177,15 +176,15 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
         cashierName: currentUser?.name || 'Kasir Mochi Steps Solo',
         items,
         subtotal,
-        discount: discountAmount,
+        discount: discountAmount || 0,
         grandTotal,
         paymentMethod,
-        amountPaid: paymentMethod === 'TUNAI' ? cashAmountPaid : grandTotal,
-        change,
+        amountPaid: paymentMethod === 'TUNAI' ? (cashAmountPaid || grandTotal) : grandTotal,
+        change: change || 0,
         customerName: customerName.trim() || 'Pelanggan Walk-in',
-        customerPhone: customerPhone.trim() || undefined,
+        customerPhone: customerPhone.trim() || '',
         status: 'SELESAI' as const,
-        notes: notes.trim() || undefined
+        notes: notes.trim() || ''
       };
 
       const createdTx = await api.createPOSTransaction(payload);
@@ -197,6 +196,7 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
       // Open receipt automatically
       setReceiptTx(createdTx);
     } catch (err: any) {
+      console.error('POS transaction error:', err);
       alert(err.message || 'Gagal memproses transaksi kasir');
     } finally {
       setIsProcessing(false);
@@ -632,8 +632,8 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
               </div>
             </div>
 
-            {/* Product Cards Grid with Proper Scroll */}
-            <div className="flex-1 overflow-y-auto pr-1 min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Product Cards Grid with Smooth Vertical Scroll */}
+            <div className="flex-1 overflow-y-auto pr-1 min-h-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 auto-rows-max content-start pb-8">
               {availableProducts.length === 0 ? (
                 <div className="col-span-full py-16 text-center text-xs text-[#8C8072] bg-white rounded-2xl border border-dashed border-[#DDD3C7]">
                   <Search className="w-8 h-8 text-[#DDD3C7] mx-auto mb-2" />
@@ -642,80 +642,120 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
                 </div>
               ) : (
                 availableProducts.map(product => {
+                  const availableSizes = product.sizes.filter(s => s.stock > 0);
+                  const activeSelectedSize = selectedProductSizes[product.id] || (availableSizes[0]?.size ?? product.sizes[0]?.size ?? 38);
+                  const currentSizeStock = product.sizes.find(s => s.size === activeSelectedSize)?.stock ?? 0;
+
                   return (
                     <div
                       key={product.id}
-                      className="bg-white rounded-xl border border-[#EAE3DA] overflow-hidden shadow-2xs hover:border-[#B36B73] transition-all flex flex-col justify-between"
+                      onClick={() => {
+                        if (product.totalStock > 0) {
+                          handleAddToCart(product, activeSelectedSize);
+                        }
+                      }}
+                      className="bg-white rounded-2xl border border-[#EAE3DA] overflow-hidden shadow-2xs hover:shadow-md hover:border-[#B36B73] transition-all flex flex-col justify-between cursor-pointer group active:scale-[0.995]"
+                      title={`Klik untuk menambahkan ${product.name} ke keranjang`}
                     >
-                      <div className="p-3">
-                        <div className="relative aspect-4/3 rounded-lg overflow-hidden bg-[#FAF7F2] mb-2">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          <span className="absolute top-1.5 right-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-white/95 text-[#4A3E31] border border-[#DDD3C7] shadow-2xs">
-                            Stok: {product.totalStock}
-                          </span>
-                          <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-medium bg-[#24211D]/80 text-[#FAF7F2] backdrop-blur-xs">
-                            {product.categoryName}
-                          </span>
-                        </div>
-
-                        <h4 className="font-brand font-bold text-xs text-[#2D2A26] line-clamp-1">
-                          {product.name}
-                        </h4>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="font-bold text-xs text-[#B36B73] tabular-nums">
-                            {formatIDR(product.price)}
-                          </span>
-                          <span className="text-[10px] text-[#8C8072]">
-                            Busa Insole 8mm
-                          </span>
-                        </div>
+                      {/* 1. Foto Produk dengan Tinggi Terukur & Badge */}
+                      <div className="relative h-32 sm:h-36 w-full overflow-hidden bg-[#FAF7F2] shrink-0">
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                        <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/95 text-[#4A3E31] border border-[#DDD3C7] shadow-xs">
+                          Stok Total: {product.totalStock}
+                        </span>
+                        <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-bold bg-[#24211D]/85 text-[#FAF7F2] backdrop-blur-xs">
+                          {product.categoryName}
+                        </span>
                       </div>
 
-                      {/* Size Selector Buttons for Instant Cart Add */}
-                      <div className="p-2.5 bg-[#FAF8F5] border-t border-[#F2EDE6]">
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[10px] font-bold text-[#6D5D4E]">
-                            Pilih Ukuran Kasir:
-                          </span>
-                          <span className="text-[9px] text-[#8C8072]">Klik size untuk tambah</span>
+                      {/* 2. Informasi Produk (Nama, Harga, Insole) */}
+                      <div className="p-3.5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <h4 
+                            className="font-brand font-bold text-xs sm:text-sm text-[#2D2A26] line-clamp-1 group-hover:text-[#B36B73] transition-colors"
+                            title={product.name}
+                          >
+                            {product.name}
+                          </h4>
+                          <div className="flex items-baseline justify-between mt-1">
+                            <span className="font-bold text-xs sm:text-sm text-[#B36B73] tabular-nums">
+                              {formatIDR(product.price)}
+                            </span>
+                            <span className="text-[10px] text-[#8C8072] font-medium">
+                              Insole Busa 8mm
+                            </span>
+                          </div>
                         </div>
-                        <div className="grid grid-cols-6 gap-1">
-                          {product.sizes.map(s => {
-                            const isAvailable = s.stock > 0;
-                            // Check if this size is already in cart
-                            const inCartItem = posCart.find(
-                              item => item.product.id === product.id && item.selectedSize === s.size
-                            );
 
-                            return (
-                              <button
-                                key={s.size}
-                                type="button"
-                                disabled={!isAvailable}
-                                onClick={() => handleAddToCart(product, s.size)}
-                                className={`py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer flex flex-col items-center justify-center relative ${
-                                  inCartItem
-                                    ? 'bg-[#2D2A26] border-[#2D2A26] text-white shadow-xs'
-                                    : isAvailable
-                                      ? 'bg-white border-[#DDD3C7] text-[#2D2A26] hover:bg-[#FAF7F2] hover:border-[#B36B73] active:scale-95 shadow-2xs'
-                                      : 'bg-[#F2EDE6] border-transparent text-[#B5A99B] cursor-not-allowed opacity-50'
-                                }`}
-                                title={`Size ${s.size} (Stok: ${s.stock}${inCartItem ? ` | Di keranjang: ${inCartItem.quantity}` : ''})`}
-                              >
-                                <span>{s.size}</span>
-                                {inCartItem && (
-                                  <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#B36B73] text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-xs">
-                                    {inCartItem.quantity}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
+                        {/* 3. Stok / Ukuran Selector */}
+                        <div className="mt-3 pt-2 border-t border-[#F2EDE6]">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[10px] font-bold text-[#6D5D4E]">
+                              Pilih Ukuran: <strong className="text-[#B36B73]">Sz {activeSelectedSize}</strong>
+                            </span>
+                            <span className="text-[9px] text-[#8C8072]">
+                              {currentSizeStock > 0 ? `${currentSizeStock} pasang ready` : 'Stok habis'}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-6 gap-1" onClick={(e) => e.stopPropagation()}>
+                            {product.sizes.map(s => {
+                              const isAvailable = s.stock > 0;
+                              const isSelected = activeSelectedSize === s.size;
+                              const inCartItem = posCart.find(
+                                item => item.product.id === product.id && item.selectedSize === s.size
+                              );
+
+                              return (
+                                <button
+                                  key={s.size}
+                                  type="button"
+                                  disabled={!isAvailable}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProductSizes(prev => ({ ...prev, [product.id]: s.size }));
+                                    handleAddToCart(product, s.size);
+                                  }}
+                                  className={`py-1 text-[11px] font-bold rounded-lg border transition-all cursor-pointer flex flex-col items-center justify-center relative ${
+                                    isSelected
+                                      ? 'bg-[#2D2A26] border-[#2D2A26] text-white shadow-xs'
+                                      : isAvailable
+                                        ? 'bg-white border-[#DDD3C7] text-[#2D2A26] hover:bg-[#FAF7F2] hover:border-[#B36B73]'
+                                        : 'bg-[#F2EDE6] border-transparent text-[#B5A99B] cursor-not-allowed opacity-50'
+                                  }`}
+                                  title={`Size ${s.size} (Stok: ${s.stock}${inCartItem ? ` | Di keranjang: ${inCartItem.quantity}` : ''})`}
+                                >
+                                  <span>{s.size}</span>
+                                  {inCartItem && (
+                                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#B36B73] text-white text-[8px] font-bold rounded-full flex items-center justify-center shadow-xs">
+                                      {inCartItem.quantity}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 4. Tombol Wajib: Tambah ke Keranjang */}
+                        <div className="mt-3 pt-2 border-t border-[#F2EDE6]">
+                          <button
+                            type="button"
+                            disabled={product.totalStock <= 0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(product, activeSelectedSize);
+                            }}
+                            className="w-full py-2 px-3 bg-[#2D2A26] hover:bg-[#1A1816] text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-98 cursor-pointer disabled:opacity-50"
+                          >
+                            <Plus className="w-3.5 h-3.5 text-[#E3B890]" />
+                            <span>Tambah ke Keranjang</span>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1263,7 +1303,7 @@ export const POSKasirView: React.FC<POSKasirViewProps> = ({
               </button>
               <button
                 type="button"
-                disabled={isProcessing || (paymentMethod === 'TUNAI' && cashAmountPaid < grandTotal)}
+                disabled={isProcessing}
                 onClick={handleProcessTransaction}
                 className="flex-1 py-2.5 px-4 bg-[#2D2A26] hover:bg-[#1A1816] text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
               >

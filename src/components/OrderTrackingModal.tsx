@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Search, Upload, CheckCircle2, Clock, AlertCircle, FileText, 
-  Check, Truck, ShieldCheck, MapPin, CreditCard, RefreshCw, Phone
+  Check, Truck, ShieldCheck, MapPin, CreditCard, RefreshCw, Phone,
+  ArrowLeft, Trash2, History, Sparkles
 } from 'lucide-react';
 import { Order } from '../types';
 import { api } from '../api';
@@ -20,14 +21,29 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   const [invoiceQuery, setInvoiceQuery] = useState(initialInvoice || '');
   const [phoneQuery, setPhoneQuery] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
+  const [phoneMatchOrders, setPhoneMatchOrders] = useState<Order[]>([]);
+  const [savedLocalOrders, setSavedLocalOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
+  // Load saved orders from device localStorage
   useEffect(() => {
-    if (initialInvoice && isOpen) {
-      setInvoiceQuery(initialInvoice);
+    if (isOpen) {
+      try {
+        const raw = localStorage.getItem('mochisteps_my_orders');
+        if (raw) {
+          setSavedLocalOrders(JSON.parse(raw));
+        }
+      } catch (err) {
+        console.warn('Error reading stored orders:', err);
+      }
+
+      if (initialInvoice) {
+        setInvoiceQuery(initialInvoice);
+        lookupOrder(initialInvoice, '');
+      }
     }
   }, [initialInvoice, isOpen]);
 
@@ -41,54 +57,84 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     return p.replace(/[^0-9]/g, '');
   };
 
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const inv = invoiceQuery.trim();
-    const ph = normalizePhone(phoneQuery.trim());
-
-    if (!inv) {
-      setError('Mohon masukkan Nomor Pesanan / Invoice Anda.');
-      return;
-    }
-
+  const lookupOrder = async (targetInvoice: string, targetPhone: string) => {
     setIsLoading(true);
     setError(null);
     setUploadSuccess(false);
+    setPhoneMatchOrders([]);
 
     try {
       const allOrders = await api.getOrders();
-      // Match by invoice number or ID
-      const matched = allOrders.find(
-        (o) => o.invoiceNumber.toLowerCase() === inv.toLowerCase() ||
-               o.id.toLowerCase() === inv.toLowerCase()
-      );
+      const invClean = targetInvoice.trim().toLowerCase();
+      const phClean = normalizePhone(targetPhone);
 
-      if (!matched) {
-        setError('Pesanan dengan nomor invoice tersebut tidak ditemukan. Mohon periksa kembali nomor pesanan Anda.');
-        setOrder(null);
-        setIsLoading(false);
-        return;
-      }
+      if (invClean) {
+        const matched = allOrders.find(
+          (o) => o.invoiceNumber.toLowerCase() === invClean ||
+                 o.id.toLowerCase() === invClean
+        );
 
-      // If user entered phone, verify phone match (last 4 digits or full phone match)
-      if (ph.length > 0) {
-        const orderPhoneClean = normalizePhone(matched.customerPhone || '');
-        if (orderPhoneClean && !orderPhoneClean.includes(ph) && !ph.includes(orderPhoneClean.slice(-4))) {
-          setError('Nomor HP tidak sesuai dengan nomor pemesan pada invoice ini. Mohon masukkan nomor HP yang digunakan saat checkout.');
+        if (!matched) {
+          setError(`Pesanan dengan nomor invoice "${targetInvoice}" tidak ditemukan.`);
           setOrder(null);
-          setIsLoading(false);
           return;
         }
-      }
 
-      // Re-fetch latest document from Firestore
-      const freshOrder = await api.getOrder(matched.id).catch(() => matched);
-      setOrder(freshOrder || matched);
+        // Optional phone check
+        if (phClean.length > 0) {
+          const orderPhoneClean = normalizePhone(matched.customerPhone || '');
+          if (orderPhoneClean && !orderPhoneClean.includes(phClean) && !phClean.includes(orderPhoneClean.slice(-4))) {
+            setError('Nomor HP tidak sesuai dengan data pemesan pada invoice ini.');
+            setOrder(null);
+            return;
+          }
+        }
+
+        const freshOrder = await api.getOrder(matched.id).catch(() => matched);
+        setOrder(freshOrder || matched);
+      } else if (phClean.length > 0) {
+        // User searched ONLY by phone number
+        const matched = allOrders.filter((o) => {
+          const ordPhone = normalizePhone(o.customerPhone || '');
+          return ordPhone && (ordPhone.includes(phClean) || phClean.includes(ordPhone.slice(-4)));
+        });
+
+        if (matched.length === 0) {
+          setError(`Tidak ditemukan pesanan dengan nomor HP "${targetPhone}". Pastikan nomor HP sesuai dengan yang diisi saat checkout.`);
+          setOrder(null);
+          return;
+        }
+
+        if (matched.length === 1) {
+          const freshOrder = await api.getOrder(matched[0].id).catch(() => matched[0]);
+          setOrder(freshOrder || matched[0]);
+        } else {
+          setPhoneMatchOrders(matched);
+          setOrder(null);
+        }
+      } else {
+        setError('Mohon masukkan Nomor Invoice ATAU Nomor HP WhatsApp yang digunakan saat checkout.');
+      }
     } catch (err: any) {
       setError(err.message || 'Gagal mencari pesanan dari database');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    await lookupOrder(invoiceQuery, phoneQuery);
+  };
+
+  const handleSelectRecent = (inv: string) => {
+    setInvoiceQuery(inv);
+    lookupOrder(inv, '');
+  };
+
+  const handleClearHistory = () => {
+    localStorage.removeItem('mochisteps_my_orders');
+    setSavedLocalOrders([]);
   };
 
   // Upload proof of payment
@@ -149,57 +195,84 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
         </div>
 
         <div className="p-6 space-y-5">
-          {/* Form Pencarian & Verifikasi No. HP */}
-          <form onSubmit={handleSearch} className="space-y-3 bg-[#FAF8F5] p-4 rounded-xl border border-[#EAE2D7]">
-            <div className="text-xs font-bold text-[#2D2A26]">
-              Masukkan Nomor Pesanan &amp; Verifikasi Nomor HP:
+          {/* Back button if an order is currently active */}
+          {order && (
+            <div className="flex items-center justify-between pb-1 border-b border-[#EAE3DA]">
+              <button
+                type="button"
+                onClick={() => {
+                  setOrder(null);
+                  setError(null);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#B36B73] hover:text-[#8F4850] transition-colors cursor-pointer py-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>← Kembali Cari / Lacak Pesanan Lain</span>
+              </button>
+              <span className="text-[11px] text-[#7A6E60]">Menampilkan status pesanan saat ini</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          )}
+
+          {/* Form Pencarian Fleksibel (Nomor Invoice ATAU Nomor HP/WA) */}
+          {!order && (
+            <form onSubmit={handleSearch} className="space-y-3 bg-[#FAF8F5] p-4 rounded-xl border border-[#EAE2D7]">
               <div>
-                <label className="text-[11px] text-[#7A6E60] font-medium block mb-1">
-                  Nomor Invoice / Pesanan:
-                </label>
-                <input
-                  type="text"
-                  value={invoiceQuery}
-                  onChange={(e) => setInvoiceQuery(e.target.value)}
-                  placeholder="Contoh: MS-20261014-5680"
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#DDD3C7] rounded-xl focus:outline-none focus:border-[#B36B73] font-mono font-medium"
-                />
+                <div className="text-xs font-bold text-[#2D2A26] flex items-center gap-1.5">
+                  <Search className="w-3.5 h-3.5 text-[#B36B73]" />
+                  <span>Cari Pesanan (Bisa dengan Nomor HP Saja):</span>
+                </div>
+                <p className="text-[11px] text-[#7A6E60] mt-0.5">
+                  Tidak hafal nomor pesanan? Cukup isi nomor HP / WhatsApp yang Anda gunakan saat checkout!
+                </p>
               </div>
 
-              <div>
-                <label className="text-[11px] text-[#7A6E60] font-medium block mb-1">
-                  Nomor HP / WhatsApp (Verifikasi):
-                </label>
-                <input
-                  type="text"
-                  value={phoneQuery}
-                  onChange={(e) => setPhoneQuery(e.target.value)}
-                  placeholder="Contoh: 08123456789"
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#DDD3C7] rounded-xl focus:outline-none focus:border-[#B36B73] font-mono"
-                />
-              </div>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="text-[11px] text-[#7A6E60] font-medium block mb-1">
+                    Nomor Invoice / Pesanan (Opsional):
+                  </label>
+                  <input
+                    type="text"
+                    value={invoiceQuery}
+                    onChange={(e) => setInvoiceQuery(e.target.value)}
+                    placeholder="Contoh: MS-20261014-5680"
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#DDD3C7] rounded-xl focus:outline-none focus:border-[#B36B73] font-mono font-medium"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-2.5 bg-[#2D2A26] hover:bg-[#1A1816] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-[#E3B890]" />
-                  <span>Memeriksa Database...</span>
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4 text-[#E3B890]" />
-                  <span>Cari &amp; Lacak Pesanan</span>
-                </>
-              )}
-            </button>
-          </form>
+                <div>
+                  <label className="text-[11px] text-[#7A6E60] font-medium block mb-1">
+                    Nomor HP / WhatsApp:
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneQuery}
+                    onChange={(e) => setPhoneQuery(e.target.value)}
+                    placeholder="Contoh: 08123456789"
+                    className="w-full px-3 py-2 text-xs bg-white border border-[#DDD3C7] rounded-xl focus:outline-none focus:border-[#B36B73] font-mono font-medium"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-2.5 bg-[#2D2A26] hover:bg-[#1A1816] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-98"
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#E3B890]" />
+                    <span>Memeriksa Database...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 text-[#E3B890]" />
+                    <span>Lacak Pesanan Sekarang</span>
+                  </>
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Error Message */}
           {error && (
@@ -214,6 +287,110 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
             <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2 shadow-2xs">
               <Check className="w-4 h-4 shrink-0" />
               <span>✓ Bukti pembayaran berhasil diunggah! Admin toko akan segera memverifikasi pesanan Anda.</span>
+            </div>
+          )}
+
+          {/* Multiple Orders Found by Phone Number */}
+          {!order && phoneMatchOrders.length > 0 && (
+            <div className="space-y-2.5 bg-[#FAF7F2] p-4 rounded-xl border border-[#E8DACB]">
+              <div className="font-bold text-xs text-[#2D2A26] flex items-center justify-between">
+                <span>Ditemukan {phoneMatchOrders.length} Pesanan untuk Nomor {phoneQuery}:</span>
+                <span className="text-[11px] text-[#7A6E60]">Klik pesanan untuk melihat detail</span>
+              </div>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {phoneMatchOrders.map((po) => (
+                  <div
+                    key={po.id}
+                    onClick={() => setOrder(po)}
+                    className="p-3 bg-white rounded-xl border border-[#DDD3C7] hover:border-[#B36B73] transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs"
+                  >
+                    <div>
+                      <div className="font-mono font-bold text-xs text-[#2D2A26]">{po.invoiceNumber}</div>
+                      <div className="text-[10px] text-[#7A6E60]">
+                        {new Date(po.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} · {po.customerName}
+                      </div>
+                    </div>
+                    <div className="text-right flex items-center gap-2.5">
+                      <div>
+                        <div className="font-bold text-xs text-[#B36B73] tabular-nums">{formatIDR(po.grandTotal)}</div>
+                        <span className={`inline-block px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                          po.paymentStatus === 'DISETUJUI' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
+                        }`}>
+                          {po.paymentStatus}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOrder(po);
+                        }}
+                        className="px-2.5 py-1 bg-[#2D2A26] hover:bg-[#1A1816] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Lihat Status
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Saved Orders on this Device (Automatic 1-Click Tracking) */}
+          {!order && phoneMatchOrders.length === 0 && savedLocalOrders.length > 0 && (
+            <div className="space-y-2.5 bg-[#FAF7F2] p-4 rounded-xl border border-[#E8DACB]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#E3B890]" />
+                  <span className="font-bold text-xs text-[#2D2A26]">Pesanan Tersimpan di Perangkat Ini</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearHistory}
+                  className="text-[10px] text-[#8C8072] hover:text-rose-600 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Hapus riwayat lokal di browser ini"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Bersihkan Riwayat</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-[#7A6E60]">
+                Klik langsung pesanan di bawah ini untuk melihat status pengiriman tanpa perlu mengetik ulang nomor invoice:
+              </p>
+
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {savedLocalOrders.map((so: any) => (
+                  <div
+                    key={so.invoiceNumber}
+                    onClick={() => handleSelectRecent(so.invoiceNumber)}
+                    className="p-3 bg-white rounded-xl border border-[#DDD3C7] hover:border-[#B36B73] transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs group"
+                  >
+                    <div>
+                      <div className="font-mono font-bold text-xs text-[#2D2A26] group-hover:text-[#B36B73] transition-colors">
+                        {so.invoiceNumber}
+                      </div>
+                      <div className="text-[10px] text-[#7A6E60]">
+                        {new Date(so.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })} · {so.customerName || 'Pelanggan'}
+                      </div>
+                    </div>
+                    <div className="text-right flex items-center gap-2.5">
+                      <div className="font-bold text-xs text-[#B36B73] tabular-nums">
+                        {formatIDR(so.grandTotal)}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectRecent(so.invoiceNumber);
+                        }}
+                        className="px-3 py-1 bg-[#2D2A26] group-hover:bg-[#B36B73] text-white text-[11px] font-bold rounded-lg transition-colors cursor-pointer shadow-xs"
+                      >
+                        Lacak Sekarang
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
