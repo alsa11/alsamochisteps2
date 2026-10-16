@@ -111,10 +111,40 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [isRecordMutationOpen, setIsRecordMutationOpen] = useState(false);
   const [recordMutationTargetProductId, setRecordMutationTargetProductId] = useState<string | undefined>(undefined);
 
+  // Real-time Firestore subscriptions: updates orders, stock, and approvals automatically without manual refresh
   useEffect(() => {
-    if (isOpen) {
-      loadAllData();
-    }
+    if (!isOpen) return;
+
+    // Initial comprehensive fetch
+    loadAllData();
+
+    // 1. Real-time incoming orders & approval status listener
+    const unsubOrders = api.subscribeOrders((liveOrders) => {
+      setOrders(liveOrders);
+    });
+
+    // 2. Real-time product inventory & stock reduction listener
+    const unsubProducts = api.subscribeProducts((liveProducts) => {
+      setProducts(liveProducts);
+      onRefreshProducts();
+    });
+
+    // 3. Real-time POS cashier transactions listener
+    const unsubPOS = api.subscribePOSTransactions((livePOS) => {
+      setPosTransactions(livePOS);
+    });
+
+    // 4. Real-time customer database listener
+    const unsubCustomers = api.subscribeCustomers((liveCustomers) => {
+      setCustomers(liveCustomers);
+    });
+
+    return () => {
+      unsubOrders();
+      unsubProducts();
+      unsubPOS();
+      unsubCustomers();
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;

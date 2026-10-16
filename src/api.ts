@@ -299,5 +299,22 @@ export const api = {
       throw new Error(err.message || 'Login gagal');
     }
     return res.json();
+  },
+
+  // Real-time Firestore subscriptions (No refresh required)
+  subscribeOrders(callback: (orders: Order[]) => void): () => void {
+    return firestoreService.subscribeOrders(callback);
+  },
+
+  subscribeProducts(callback: (products: Product[]) => void): () => void {
+    return firestoreService.subscribeProducts(callback);
+  },
+
+  subscribePOSTransactions(callback: (txs: POSTransaction[]) => void): () => void {
+    return firestoreService.subscribePOSTransactions(callback);
+  },
+
+  subscribeCustomers(callback: (customers: Customer[]) => void): () => void {
+    return firestoreService.subscribeCustomers(callback);
   }
 };

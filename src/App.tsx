@@ -95,9 +95,14 @@ export default function App() {
       }
       setIsTrackingOpen(true);
     };
-    window.addEventListener('open-tracking-modal', handleOpenTracking);
+    // Real-time products sync for webstore storefront (stock updates live)
+    const unsubProducts = api.subscribeProducts((liveProducts) => {
+      setProducts(liveProducts);
+      setIsLoadingProducts(false);
+    });
 
     return () => {
+      unsubProducts();
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('open-tracking-modal', handleOpenTracking);
     };

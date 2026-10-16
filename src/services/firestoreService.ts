@@ -8,7 +8,8 @@ import {
   deleteDoc, 
   query, 
   orderBy, 
-  writeBatch
+  writeBatch,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Product, Order, Customer, SalesReport, CartItem, StockMutation, POSTransaction } from '../types';
@@ -887,6 +888,34 @@ export const firestoreService = {
     return { success: true };
   },
 
+  // Real-time listener for products (Stock & Catalog)
+  subscribeProducts(callback: (products: Product[]) => void): () => void {
+    try {
+      const unsub = onSnapshot(collection(db, 'products'), (snapshot) => {
+        if (snapshot.empty) {
+          callback(INITIAL_PRODUCTS);
+          return;
+        }
+        const prods = snapshot.docs.map(d => {
+          const data = d.data() as Product;
+          return {
+            ...data,
+            id: d.id,
+            costPrice: data.costPrice || Math.round(data.price * 0.55),
+            isActive: data.isActive !== false
+          };
+        });
+        callback(prods);
+      }, (err) => {
+        console.warn('Real-time products subscription notice:', err);
+      });
+      return unsub;
+    } catch (e) {
+      console.warn('subscribeProducts error fallback:', e);
+      return () => {};
+    }
+  },
+
   async getOrders(): Promise<Order[]> {
     try {
       const snap = await getDocs(collection(db, 'orders'));
@@ -894,6 +923,27 @@ export const firestoreService = {
       return snap.docs.map(d => ({ id: d.id, ...d.data() } as Order));
     } catch (e) {
       return INITIAL_ORDERS;
+    }
+  },
+
+  // Real-time listener for incoming orders & approval status changes
+  subscribeOrders(callback: (orders: Order[]) => void): () => void {
+    try {
+      const unsub = onSnapshot(collection(db, 'orders'), (snapshot) => {
+        if (snapshot.empty) {
+          callback(INITIAL_ORDERS);
+          return;
+        }
+        const ords = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Order));
+        ords.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        callback(ords);
+      }, (err) => {
+        console.warn('Real-time orders subscription notice:', err);
+      });
+      return unsub;
+    } catch (e) {
+      console.warn('subscribeOrders error fallback:', e);
+      return () => {};
     }
   },
 
@@ -1197,6 +1247,26 @@ export const firestoreService = {
     return { id: snap.id, ...snap.data() } as Customer;
   },
 
+  // Real-time listener for customers
+  subscribeCustomers(callback: (customers: Customer[]) => void): () => void {
+    try {
+      const unsub = onSnapshot(collection(db, 'customers'), (snapshot) => {
+        if (snapshot.empty) {
+          callback(INITIAL_CUSTOMERS);
+          return;
+        }
+        const custs = snapshot.docs.map(d => ({ id: d.id, ...d.data(), isActive: d.data().isActive !== false } as Customer));
+        callback(custs);
+      }, (err) => {
+        console.warn('Real-time customers subscription notice:', err);
+      });
+      return unsub;
+    } catch (e) {
+      console.warn('subscribeCustomers error fallback:', e);
+      return () => {};
+    }
+  },
+
   // POS TRANSACTIONS
   async getPOSTransactions(): Promise<POSTransaction[]> {
     try {
@@ -1206,6 +1276,27 @@ export const firestoreService = {
       return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch {
       return INITIAL_POS_TRANSACTIONS;
+    }
+  },
+
+  // Real-time listener for POS Transactions
+  subscribePOSTransactions(callback: (txs: POSTransaction[]) => void): () => void {
+    try {
+      const unsub = onSnapshot(collection(db, 'pos_transactions'), (snapshot) => {
+        if (snapshot.empty) {
+          callback(INITIAL_POS_TRANSACTIONS);
+          return;
+        }
+        const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as POSTransaction));
+        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        callback(list);
+      }, (err) => {
+        console.warn('Real-time POS subscription notice:', err);
+      });
+      return unsub;
+    } catch (e) {
+      console.warn('subscribePOSTransactions error fallback:', e);
+      return () => {};
     }
   },
 
